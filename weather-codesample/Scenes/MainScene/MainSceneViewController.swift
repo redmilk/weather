@@ -19,6 +19,7 @@ final class MainSceneViewController: UIViewController {
     @IBOutlet private weak var humidityLabel: UILabel!
     @IBOutlet private weak var weatherIconLabel: UILabel!
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
+    @IBOutlet weak var locationButton: UIButton!
     
     private var intent = MainSceneIntent(reducer: MainSceneReducer())
     private let bag = DisposeBag()
@@ -33,7 +34,7 @@ final class MainSceneViewController: UIViewController {
         
         /// Output
         searchTextField.rx.controlEvent(.editingDidEndOnExit)
-            .debug("🟥 SearchTextField editingDidEndOnExit")
+            .debug("🔸 SearchTextField editingDidEndOnExit")
             .map { self.searchTextField.text ?? "" }
             .filter { !$0.isEmpty }
             .map { MainSceneIntent.Action.getWeatherBy(city: $0) }
@@ -42,9 +43,15 @@ final class MainSceneViewController: UIViewController {
         
         /// Input
         store.mainSceneState
-            .debug("🔳 SearchTextField mainSceneState")
+            .debug("⚪️ SearchTextField mainSceneState")
             .observeOn(MainScheduler.instance)
             .bind(to: stateBinder)
+            .disposed(by: bag)
+        
+        locationButton.rx.controlEvent(.touchUpInside)
+            .debug("🟠 Button Pressed")
+            .map { MainSceneIntent.Action.currentLocationWeather }
+            .bind(to: intent.action)
             .disposed(by: bag)
     }
     

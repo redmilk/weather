@@ -41,6 +41,8 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string> Please provide access to location services </string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

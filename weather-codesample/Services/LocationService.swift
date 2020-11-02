@@ -54,13 +54,13 @@ final class LocationService {
         }
     }
     
+    public func requestPermission() {
+        self.locationManager.requestWhenInUseAuthorization()
+        self.locationManager.startUpdatingLocation()
+    }
+    
     init() {
         accuracy = kCLLocationAccuracyNearestTenMeters
-        let _ = currentLocation.do(onSubscribe: {
-            self.locationManager.requestWhenInUseAuthorization()
-            self.locationManager.startUpdatingLocation()
-        })
-        
     }
     
     private let locationManager = CLLocationManager()

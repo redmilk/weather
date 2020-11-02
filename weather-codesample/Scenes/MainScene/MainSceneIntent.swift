@@ -13,7 +13,7 @@ class MainSceneIntent {
     
     enum Action {
         case getWeatherBy(city: String)
-        case currentLocation
+        case currentLocationWeather
     }
     
     public var action: PublishRelay<Action>
@@ -35,9 +35,9 @@ class MainSceneIntent {
     private func dispatch(action: Action) {
         switch action {
         case .getWeatherBy(let city):
-            reducer.action.accept(RequestWeatherByCityName(cityName: city))
-        case .currentLocation:
-            break
+            reducer.action.accept(GetWeatherByCityName(cityName: city))
+        case .currentLocationWeather:
+            reducer.action.accept(GetCurrentLocationWeather())
         }
     }
     

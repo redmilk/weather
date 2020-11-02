@@ -9,37 +9,34 @@ import Foundation
 import RxSwift
 
 
-struct GetWeatherByCityName: ActionType {
+struct GetWeatherByCityName: ActionType,
+                             Networkingable {
     
     public var weather: Observable<Weather> {
-        return ApiController.shared.currentWeather(city: cityName).catchErrorJustReturn(Weather())
+        return apiClient.currentWeather(city: cityName).catchErrorJustReturn(Weather())
     }
     
-    init(apiController: ApiController = ApiController.shared,
-         cityName: String
-    ) {
-        self.apiController = apiController
+    init(cityName: String) {
         self.cityName = cityName
     }
     
-    /// Internal
-    private let apiController: ApiController
     private let cityName: String
 }
 
 
-struct GetCurrentLocationWeather: ActionType {
-    
-    init(locationService: LocationService) {
-        self.locationService = locationService
-    }
+struct GetCurrentLocationWeather: ActionType,
+                                  Locationable,
+                                  Networkingable {
     
     var weather: Observable<Weather> {
-        return locationService.currentLocation.flatMap {
-            ApiController.shared.currentWeather(at: $0.coordinate)
+        return locationService.currentLocation.flatMap { location in
+            apiClient.currentWeather(at: location.coordinate)
         }
+        .do(onSubscribe: {
+            locationService.requestPermission()
+        })
+        .catchErrorJustReturn(Weather())
     }
     
-    private let locationService: LocationService
     private let bag = DisposeBag()
 }

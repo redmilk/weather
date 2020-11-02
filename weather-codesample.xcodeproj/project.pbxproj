@@ -140,11 +140,11 @@
 		79169A04254C4213008F9546 /* MainScene */ = {
 			isa = PBXGroup;
 			children = (
-				79169A87254F6F25008F9546 /* MainSceneState.swift */,
 				79169A06254C428E008F9546 /* MainSceneViewController.swift */,
+				79169A87254F6F25008F9546 /* MainSceneState.swift */,
 				79169A84254F6EDC008F9546 /* MainSceneIntent.swift */,
-				79169A8A254F6F58008F9546 /* MainSceneReducer.swift */,
 				79169A79254F52FA008F9546 /* MainSceneActions.swift */,
+				79169A8A254F6F58008F9546 /* MainSceneReducer.swift */,
 				79169A0C254C42CD008F9546 /* Main.storyboard */,
 			);
 			path = MainScene;

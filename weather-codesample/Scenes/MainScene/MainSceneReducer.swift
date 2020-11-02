@@ -24,20 +24,36 @@ class MainSceneReducer: StateStoreAccessible {
         
     private func reduce(action: ActionType, state: MainSceneState) {
         /// Request weather by city name
-        if let weatherByCity = action as? RequestWeatherByCityName {
-            weatherByCity.weather.map { weather in
+        if let weatherByCity = action as? GetWeatherByCityName {
+            weatherByCity
+                .weather
+                .debug("🟧 Weather By City Request")
+                .map({ weather in
                 var newState = state
-                newState.humidity = weather.main?.humidity?.description ?? "-"
-                newState.temperature = weather.main?.temp?.description ?? "-"
                 newState.searchText = weather.name ?? "-"
+                newState.temperature = weather.main?.temp?.description ?? "-"
+                newState.humidity = weather.main?.humidity?.description ?? "-"
+                newState.weatherIcon = weather.weather?.first?.icon ?? "-"
                 return newState
-            }
+            })
             .bind(to: store.mainSceneState)
             .disposed(by: bag)
         }
         /// Current location weather
-        
-        
+        if let currentLocationWeather = action as? GetCurrentLocationWeather {
+            currentLocationWeather.weather
+                .debug("🟦 Weather at current location")
+                .map ({ (weather) -> MainSceneState in
+                    var newState = state
+                    newState.searchText = weather.name ?? "-"
+                    newState.temperature = weather.main?.temp?.description ?? "-"
+                    newState.humidity = weather.main?.humidity?.description ?? "-"
+                    newState.weatherIcon = weather.weather?.first?.icon ?? "-"
+                    return newState
+                })
+                .bind(to: store.mainSceneState)
+                .disposed(by: bag)
+        }
     }
     
     private let bag = DisposeBag()

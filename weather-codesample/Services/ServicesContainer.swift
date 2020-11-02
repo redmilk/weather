@@ -14,13 +14,23 @@ final class ServicesContainer {
     lazy var location: LocationService = { LocationService() }()
 }
 
-protocol Networking {
+// Network client
+protocol Networkingable {
     var apiClient: ApiController { get }
 }
-
-extension Networking {
+extension Networkingable {
     var apiClient: ApiController  {
         return (UIApplication.shared.delegate as! AppDelegate).services.networking
      }
+}
+
+// Location service
+protocol Locationable {
+    var locationService: LocationService { get }
+}
+extension Locationable {
+    var locationService: LocationService {
+        return (UIApplication.shared.delegate as! AppDelegate).services.location
+    }
 }
  

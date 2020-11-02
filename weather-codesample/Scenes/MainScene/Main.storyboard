@@ -92,6 +92,7 @@
                     <connections>
                         <outlet property="activityIndicator" destination="BN2-qf-05K" id="mb8-CA-gTQ"/>
                         <outlet property="humidityLabel" destination="6rL-9W-FS7" id="mKc-dv-fUe"/>
+                        <outlet property="locationButton" destination="QER-Zg-Lqb" id="sFC-eI-7SQ"/>
                         <outlet property="searchTextField" destination="hCC-eg-tcY" id="Cn1-0U-EFQ"/>
                         <outlet property="tempLabel" destination="l3G-cA-Clh" id="BYf-2H-Faf"/>
                         <outlet property="weatherIconLabel" destination="eDZ-y6-52K" id="4K8-Cc-HEo"/>

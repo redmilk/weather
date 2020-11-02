@@ -15,7 +15,7 @@ enum AppScenes {
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
-    let stateStore = StateStore(initialState: MainSceneState.initial)
+    let stateStore = StateStore(initialState: MainSceneState())
     let services = ServicesContainer()
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
