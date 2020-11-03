@@ -5,9 +5,10 @@
 //  Created by Danyl Timofeyev on 02.11.2020.
 //
 
-import Foundation
 import RxSwift
 import RxCocoa
+
+/// Get UI events and produce according actions to reducer
 
 class MainSceneIntent {
     
@@ -16,12 +17,12 @@ class MainSceneIntent {
         case currentLocationWeather
     }
     
-    public var action: PublishRelay<Action>
+    public var action = PublishRelay<Action>()
    
-    init(reducer: MainSceneReducer = MainSceneReducer()) {
+    init(reducer: MainSceneReducer) {
         self.reducer = reducer
-        self.action = PublishRelay<Action>()
         self.action.asObservable()
+            .debug("🔸🔸🔸 MainSceneIntent action")
             .subscribe(onNext: { [weak self] action in
                 self?.dispatch(action: action)
             })
@@ -35,9 +36,9 @@ class MainSceneIntent {
     private func dispatch(action: Action) {
         switch action {
         case .getWeatherBy(let city):
-            reducer.action.accept(GetWeatherByCityName(cityName: city))
+            reducer.incomingAction.onNext(GetWeatherByCityName(cityName: city))
         case .currentLocationWeather:
-            reducer.action.accept(GetCurrentLocationWeather())
+            reducer.incomingAction.onNext(GetCurrentLocationWeather())
         }
     }
     

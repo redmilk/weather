@@ -5,56 +5,88 @@
 //  Created by Danyl Timofeyev on 02.11.2020.
 //
 
-import Foundation
 import RxSwift
 import RxCocoa
+import Foundation
+
 
 // MARK: Reducer
-class MainSceneReducer: StateStoreAccessible {
+extension MainSceneReducer: StateStoreSupporting,
+                            ReachabilitySupporting { }
+
+class MainSceneReducer {
     
-    public var action = PublishRelay<ActionType>()
-    
-    public init() {
-        self.action.subscribe(onNext: { [weak self] action in
-            guard let self = self else { return }
-            self.reduce(action: action, state: try! self.store.mainSceneState.value())
-        })
-        .disposed(by: bag)
-    }
-        
-    private func reduce(action: ActionType, state: MainSceneState) {
-        /// Request weather by city name
-        if let weatherByCity = action as? GetWeatherByCityName {
-            weatherByCity
-                .weather
-                .debug("🟧 Weather By City Request")
-                .map({ weather in
-                var newState = state
-                newState.searchText = weather.name ?? "-"
-                newState.temperature = weather.main?.temp?.description ?? "-"
-                newState.humidity = weather.main?.humidity?.description ?? "-"
-                newState.weatherIcon = weather.weather?.first?.icon ?? "-"
-                return newState
-            })
-            .bind(to: store.mainSceneState)
-            .disposed(by: bag)
-        }
-        /// Current location weather
-        if let currentLocationWeather = action as? GetCurrentLocationWeather {
-            currentLocationWeather.weather
-                .debug("🟦 Weather at current location")
-                .map ({ (weather) -> MainSceneState in
-                    var newState = state
-                    newState.searchText = weather.name ?? "-"
-                    newState.temperature = weather.main?.temp?.description ?? "-"
-                    newState.humidity = weather.main?.humidity?.description ?? "-"
-                    newState.weatherIcon = weather.weather?.first?.icon ?? "-"
-                    return newState
-                })
-                .bind(to: store.mainSceneState)
-                .disposed(by: bag)
+    /// Input
+    var incomingAction: Binder<ActionType> {
+        return Binder<ActionType>(self) { (reducer, action) in
+            reducer.reduce(action: action)
         }
     }
     
     private let bag = DisposeBag()
+    private func reduce(action: ActionType) {
+        var newState = store.mainSceneState.value
+        
+        let maxRetryTimes = 4
+        let retryHandler: (Observable<Error>) -> Observable<Int> = { err in
+            return err.enumerated().flatMap { count, error -> Observable<Int> in
+                /// attempts left
+                if count >= maxRetryTimes - 1 {
+                    return Observable.error(error)
+                    /// if connection is offline
+                } else if (error as NSError).code == -1009 {
+                    return self.reachability
+                        .status
+                        .skip(1)
+                        .map { (status: Reachability.Status) -> Bool in
+                            return status == .online
+                        }
+                        .distinctUntilChanged()
+                        .filter { $0 == true }
+                        .map { _ in 1 }
+                }
+                newState.error.accept((error.localizedDescription, error))
+                newState.retryCountText = "🔄 REQUEST RETRY LEFT: \(maxRetryTimes - count - 1)"
+                self.store.mainSceneState.accept(newState)
+                return Observable<Int>
+                    .timer(Double(count + 2), scheduler: MainScheduler.instance)
+                    .take(1)
+            }
+        }
+        
+        let weatherRequest: (Observable<Weather>) -> Void = { [weak self] weather in
+            guard let self = self else { return }
+            return weather.asObservable()
+                .debug("🟧 Weather By City Request")
+                .retryWhen(retryHandler)
+                .materialize()
+                .map { (event) -> MainSceneState in
+                    if let weather = event.element {
+                        newState.updateWeather(weather)
+                        newState.error.accept(nil)
+                    }
+                    if let error = event.error {
+                        newState.error.accept((error.localizedDescription, error))
+                    }
+                    return newState
+                }
+                .bind(to: self.store.mainSceneState)
+                .disposed(by: self.bag)
+        }
+        
+        switch action {
+        ///
+        /// Request weather by city name
+        ///
+        case let getWeather as GetWeatherByCityName:
+            weatherRequest(getWeather.weather)
+        ///
+        /// Current location weather
+        ///
+        case let locationWeather as GetCurrentLocationWeather:
+            weatherRequest(locationWeather.weather)
+            
+        default: break
+        }
+    }
 }

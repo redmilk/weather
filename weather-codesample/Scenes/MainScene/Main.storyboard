@@ -80,19 +80,47 @@
                                     <constraint firstAttribute="height" constant="200" id="8Qd-X3-4yj"/>
                                 </constraints>
                             </stackView>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="RKN-Ci-nrl">
+                                <rect key="frame" x="16" y="736" width="382" height="144"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Xkn-5E-uu7">
+                                        <rect key="frame" x="0.0" y="0.0" width="382" height="24"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="24" id="yic-FK-M1h"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="-err place-" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="IbN-Gm-Z4b">
+                                        <rect key="frame" x="0.0" y="44" width="382" height="100"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="100" id="v7W-ix-j0F"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="10"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="VHx-tw-M1i"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="VHx-tw-M1i" firstAttribute="trailing" secondItem="XM3-n7-rfi" secondAttribute="trailing" constant="24" id="AGm-6m-Po5"/>
+                            <constraint firstItem="VHx-tw-M1i" firstAttribute="trailing" secondItem="RKN-Ci-nrl" secondAttribute="trailing" constant="16" id="KX0-ui-HF6"/>
+                            <constraint firstItem="RKN-Ci-nrl" firstAttribute="leading" secondItem="VHx-tw-M1i" secondAttribute="leading" constant="16" id="Noh-V4-Jvr"/>
+                            <constraint firstAttribute="bottom" secondItem="RKN-Ci-nrl" secondAttribute="bottom" constant="16" id="OC6-CK-h8x"/>
                             <constraint firstItem="XM3-n7-rfi" firstAttribute="leading" secondItem="VHx-tw-M1i" secondAttribute="leading" constant="24" id="TRZ-JP-7cd"/>
                             <constraint firstItem="XM3-n7-rfi" firstAttribute="top" secondItem="VHx-tw-M1i" secondAttribute="top" constant="24" id="n9L-sR-aMh"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="activityIndicator" destination="BN2-qf-05K" id="mb8-CA-gTQ"/>
+                        <outlet property="errorLabel" destination="IbN-Gm-Z4b" id="O3p-QT-nVs"/>
                         <outlet property="humidityLabel" destination="6rL-9W-FS7" id="mKc-dv-fUe"/>
                         <outlet property="locationButton" destination="QER-Zg-Lqb" id="sFC-eI-7SQ"/>
+                        <outlet property="retryCounterLabel" destination="Xkn-5E-uu7" id="wmI-J0-gYf"/>
                         <outlet property="searchTextField" destination="hCC-eg-tcY" id="Cn1-0U-EFQ"/>
                         <outlet property="tempLabel" destination="l3G-cA-Clh" id="BYf-2H-Faf"/>
                         <outlet property="weatherIconLabel" destination="eDZ-y6-52K" id="4K8-Cc-HEo"/>
@@ -100,7 +128,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="6vA-va-yQH" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-488.40579710144931" y="64.955357142857139"/>
+            <point key="canvasLocation" x="-603" y="25"/>
         </scene>
     </scenes>
     <resources>

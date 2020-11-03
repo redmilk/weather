@@ -5,7 +5,6 @@
 //  Created by Danyl Timofeyev on 02.11.2020.
 //
 
-import Foundation
 import CoreLocation
 import RxSwift
 
@@ -37,6 +36,10 @@ final class LocationService {
             }
     }
     
+    var isLocationPermissionGranted: Observable<Bool> {
+        return locationManager.rx.isLocationPermissionGranted
+    }
+    
     public func setAccuracy(_ accuracy: LocationAccuracy) {
         switch accuracy {
         case .bestForNavigation:
@@ -66,4 +69,5 @@ final class LocationService {
     private let locationManager = CLLocationManager()
     private var accuracy: CLLocationAccuracy
     private let bag = DisposeBag()
+    
 }

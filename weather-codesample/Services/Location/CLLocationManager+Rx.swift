@@ -5,7 +5,6 @@
 //  Created by Danyl Timofeyev on 02.11.2020.
 //
 
-import Foundation
 import RxCocoa
 import RxSwift
 import CoreLocation
@@ -44,9 +43,18 @@ public extension Reactive where Base: CLLocationManager {
     }
     
     var didUpdateLocations: Observable<[CLLocation]> {
-        return delegate.methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didUpdateLocations:)))
+        return delegate
+            .methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didUpdateLocations:)))
             .map { parameters in
                 return parameters[1] as! [CLLocation]
+        }
+    }
+    
+    var isLocationPermissionGranted: Observable<Bool> {
+        return delegate
+            .methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didFailWithError:)))
+            .map { parameters in
+            return (parameters[1] as? Error) != nil
         }
     }
     

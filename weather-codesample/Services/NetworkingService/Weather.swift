@@ -5,14 +5,12 @@
 //  Created by Danyl Timofeyev on 31.10.2020.
 //
 
-import Foundation
 import CoreLocation
-import MapKit
-
-
 
 // MARK: - Weather
 struct Weather: Codable {
+    
+    static var e: Error? = nil
     
     var coordinate: CLLocationCoordinate2D {
         return CLLocationCoordinate2D(latitude: coord.lat, longitude: coord.lon)
@@ -45,6 +43,10 @@ struct Weather: Codable {
         timezone = nil
         id = nil
         cod = nil
+    }
+    
+    static var empty: Weather {
+        return Weather()
     }
 }
 

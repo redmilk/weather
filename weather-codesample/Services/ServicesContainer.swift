@@ -5,32 +5,57 @@
 //  Created by Danyl Timofeyev on 02.11.2020.
 //
 
-import Foundation
 import UIKit
 
+fileprivate let services = ServicesContainer()
 
 final class ServicesContainer {
     lazy var networking: ApiController = { ApiController() }()
+    lazy var reachability: Reachability = { Reachability() }()
     lazy var location: LocationService = { LocationService() }()
+    lazy var stateStore: StateStore = { StateStore() }()
 }
 
-// Network client
-protocol Networkingable {
+// Actions implement these protocols to get needed functionality
+// And only state store is implemented by VC for fetching actual state
+
+/// - Storage of application scene states
+protocol StateStoreSupporting { }
+
+extension StateStoreSupporting {
+    var store: StateStore {
+        return services.stateStore
+    }
+}
+
+/// - Network client
+protocol NetworkSupporting {
     var apiClient: ApiController { get }
 }
-extension Networkingable {
+extension NetworkSupporting {
     var apiClient: ApiController  {
-        return (UIApplication.shared.delegate as! AppDelegate).services.networking
+        return services.networking
      }
 }
 
-// Location service
-protocol Locationable {
+/// - Location service
+protocol LocationSupporting {
     var locationService: LocationService { get }
 }
-extension Locationable {
+extension LocationSupporting {
     var locationService: LocationService {
-        return (UIApplication.shared.delegate as! AppDelegate).services.location
+        return services.location
     }
 }
+
+/// - Reachability
+protocol ReachabilitySupporting {
+    var reachability: Reachability { get }
+}
+extension ReachabilitySupporting {
+    var reachability: Reachability {
+        return services.reachability
+    }
+}
+
  

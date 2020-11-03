@@ -5,27 +5,27 @@
 //  Created by Danyl Timofeyev on 01.11.2020.
 //
 
-import Foundation
 import RxSwift
 import RxCocoa
 
-
-protocol StateStoreAccessible { }
-
-extension StateStoreAccessible {
-    var store: StateStore {
-        return (UIApplication.shared.delegate as! AppDelegate).stateStore
-    }
+protocol StateStoreWriting {
+    
 }
 
+extension StateStoreWriting {
+    
+}
 
+protocol StateStoreFetching {
+    
+}
 
 final class StateStore {
     
-    public let mainSceneState: BehaviorSubject<MainSceneState>
+    public let mainSceneState: BehaviorRelay<MainSceneState>
     
-    init(initialState: MainSceneState) {
-        mainSceneState = BehaviorSubject<MainSceneState>(value: initialState)
+    init() {
+        mainSceneState = BehaviorRelay<MainSceneState>(value: MainSceneState.initialState)
     }
     
     private let bag = DisposeBag()
