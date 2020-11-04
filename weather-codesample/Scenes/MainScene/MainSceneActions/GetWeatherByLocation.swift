@@ -8,9 +8,11 @@
 import RxSwift
 import RxCocoa
 
-struct GetCurrentLocationWeather: ActionType,
-                                  LocationSupporting,
-                                  NetworkSupporting {
+
+extension GetCurrentLocationWeather: LocationSupporting,
+                                     NetworkSupporting { }
+
+struct GetCurrentLocationWeather: ActionType {
     
     var weather: Observable<Weather> {
         return locationService.currentLocation.flatMap { location in

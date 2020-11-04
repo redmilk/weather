@@ -25,7 +25,7 @@ final class StateStore {
     public let mainSceneState: BehaviorRelay<MainSceneState>
     
     init() {
-        mainSceneState = BehaviorRelay<MainSceneState>(value: MainSceneState.initialState)
+        mainSceneState = BehaviorRelay<MainSceneState>(value: MainSceneState.initial)
     }
     
     private let bag = DisposeBag()

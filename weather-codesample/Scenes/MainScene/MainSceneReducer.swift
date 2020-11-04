@@ -24,8 +24,13 @@ class MainSceneReducer {
     }
     
     private let bag = DisposeBag()
+
     private func reduce(action: ActionType) {
-        var newState = store.mainSceneState.value
+        let newState = store.mainSceneState.value
+        reachability.status
+            .map { $0 == .online }
+            .bind(to: newState.locationPermission)
+            .disposed(by: bag)
         
         let maxRetryTimes = 4
         let retryHandler: (Observable<Error>) -> Observable<Int> = { err in
@@ -45,8 +50,8 @@ class MainSceneReducer {
                         .filter { $0 == true }
                         .map { _ in 1 }
                 }
-                newState.error.accept((error.localizedDescription, error))
-                newState.retryCountText = "🔄 REQUEST RETRY LEFT: \(maxRetryTimes - count - 1)"
+                newState.error.accept(error)
+                newState.retryCountText.accept("🔄 REQUEST RETRY LEFT: \(maxRetryTimes - count - 1)")
                 self.store.mainSceneState.accept(newState)
                 return Observable<Int>
                     .timer(Double(count + 2), scheduler: MainScheduler.instance)
@@ -61,12 +66,12 @@ class MainSceneReducer {
                 .retryWhen(retryHandler)
                 .materialize()
                 .map { (event) -> MainSceneState in
+                    newState.isLoading.accept(false)
                     if let weather = event.element {
                         newState.updateWeather(weather)
-                        newState.error.accept(nil)
                     }
                     if let error = event.error {
-                        newState.error.accept((error.localizedDescription, error))
+                        newState.error.accept(error)
                     }
                     return newState
                 }
@@ -79,11 +84,13 @@ class MainSceneReducer {
         /// Request weather by city name
         ///
         case let getWeather as GetWeatherByCityName:
+            newState.isLoading.accept(true)
             weatherRequest(getWeather.weather)
         ///
         /// Current location weather
         ///
         case let locationWeather as GetCurrentLocationWeather:
+            newState.isLoading.accept(true)
             weatherRequest(locationWeather.weather)
             
         default: break

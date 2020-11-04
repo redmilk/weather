@@ -35,6 +35,7 @@
 		79169AB72550F26C008F9546 /* Reducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79169AB62550F26C008F9546 /* Reducer.swift */; };
 		798603B4255204C1005C115E /* UIViewController+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798603B3255204C1005C115E /* UIViewController+Rx.swift */; };
 		798603B725520C87005C115E /* OptionalUnwrap+Rx.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798603B625520C87005C115E /* OptionalUnwrap+Rx.swift */; };
+		798603BB25523BFF005C115E /* ApplicationErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798603BA25523BFF005C115E /* ApplicationErrors.swift */; };
 		BBC2DD95D4BCFE09732657F4 /* Pods_weather_codesample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 11CCF39BAF58F71D8E3DAFF2 /* Pods_weather_codesample.framework */; };
 /* End PBXBuildFile section */
 
@@ -74,6 +75,7 @@
 		79169AB62550F26C008F9546 /* Reducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reducer.swift; sourceTree = "<group>"; };
 		798603B3255204C1005C115E /* UIViewController+Rx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+Rx.swift"; sourceTree = "<group>"; };
 		798603B625520C87005C115E /* OptionalUnwrap+Rx.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "OptionalUnwrap+Rx.swift"; sourceTree = "<group>"; };
+		798603BA25523BFF005C115E /* ApplicationErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationErrors.swift; sourceTree = "<group>"; };
 		BE71DA21718BD41E8F5BD6B0 /* Pods_weather_codesampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_weather_codesampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D11CCE5F6BCE3703932D4DDE /* Pods-weather-codesampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-weather-codesampleTests.release.xcconfig"; path = "Target Support Files/Pods-weather-codesampleTests/Pods-weather-codesampleTests.release.xcconfig"; sourceTree = "<group>"; };
 		EDA2C9ABD59B949F180B9974 /* Pods-weather-codesample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-weather-codesample.debug.xcconfig"; path = "Target Support Files/Pods-weather-codesample/Pods-weather-codesample.debug.xcconfig"; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 		791699BA254C3BF9008F9546 /* weather-codesample */ = {
 			isa = PBXGroup;
 			children = (
+				798603B925523BEC005C115E /* Common */,
 				79169A8E254F7B4D008F9546 /* Extensions */,
 				79169A39254C99D0008F9546 /* Services */,
 				79169A37254C917B008F9546 /* Protocols */,
@@ -234,6 +237,14 @@
 				79169A96254F7CBE008F9546 /* LocationService.swift */,
 			);
 			path = Location;
+			sourceTree = "<group>";
+		};
+		798603B925523BEC005C115E /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				798603BA25523BFF005C115E /* ApplicationErrors.swift */,
+			);
+			path = Common;
 			sourceTree = "<group>";
 		};
 		8003BF79FB5D58D17A339DF4 /* Pods */ = {
@@ -378,6 +389,7 @@
 				79169A88254F6F25008F9546 /* MainSceneState.swift in Sources */,
 				79169A3B254C9A1F008F9546 /* ApiClient.swift in Sources */,
 				79169AA42550A2FD008F9546 /* GetWeatherByCityName.swift in Sources */,
+				798603BB25523BFF005C115E /* ApplicationErrors.swift in Sources */,
 				798603B725520C87005C115E /* OptionalUnwrap+Rx.swift in Sources */,
 				79169AAE2550DCE9008F9546 /* WeatherCache+Rx.swift in Sources */,
 				79169AA82550A46C008F9546 /* GetWeatherByLocation.swift in Sources */,
