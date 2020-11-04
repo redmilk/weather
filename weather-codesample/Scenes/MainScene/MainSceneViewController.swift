@@ -18,7 +18,7 @@ import RxCocoa
 extension MainSceneViewController: StateStoreSupporting,
                                    LocationSupporting { }
 
-final class MainSceneViewController: UIViewController, ReachabilitySupporting {
+final class MainSceneViewController: UIViewController {
     
     @IBOutlet private weak var searchTextField: UITextField!
     @IBOutlet private weak var tempLabel: UILabel!
@@ -35,36 +35,26 @@ final class MainSceneViewController: UIViewController, ReachabilitySupporting {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        reachability.startMonitor("google.com")
-        reachability.status
-            .subscribe()
-            .disposed(by: bag)
-        
-        
         /// State Input
         let state = store
             .mainSceneState
             .observeOn(MainScheduler.instance)
         
-                
         state
             .flatMap { $0.searchText }
             .asDriver(onErrorJustReturn: "")
             .drive(searchTextField.rx.text)
             .disposed(by: bag)
-        
         state
             .flatMap { $0.temperature }
             .asDriver(onErrorJustReturn: "")
             .drive(tempLabel.rx.text)
             .disposed(by: bag)
-        
         state
             .flatMap { $0.humidity }
             .asDriver(onErrorJustReturn: "")
             .drive(humidityLabel.rx.text)
             .disposed(by: bag)
-        
         state
             .flatMap { $0.isLoading }
             .startWith(false)
@@ -72,25 +62,22 @@ final class MainSceneViewController: UIViewController, ReachabilitySupporting {
             .asDriver(onErrorJustReturn: false)
             .drive(activityIndicator.rx.isHidden)
             .disposed(by: bag)
-        
         state
             .flatMap { $0.searchText }
             .asDriver(onErrorJustReturn: "Something went wrong")
             .drive(weatherIconLabel.rx.text)
             .disposed(by: bag)
-        
         state
             .flatMap { $0.locationPermission }
             .filter { $0 == false }
             .asDriver(onErrorJustReturn: false)
             .drive(onNext: { [weak self] _ in
                 guard let self = self else { return }
-                self.present(simpleAlertWith: "Warning", message: "Please provide location services permission in Settings app. Thank you, goodbye :]")
+                self.present(simpleAlertWith: "Warning", message: "Please provide location services permission in Settings app")
                     .subscribe()
                     .disposed(by: self.bag)
             })
             .disposed(by: bag)
-        
         state
             .debug("🔴🔴🔴")
             .flatMap { $0.error }

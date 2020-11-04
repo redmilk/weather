@@ -9,11 +9,10 @@ import RxCocoa
 import RxSwift
 import CoreLocation
 
+
 extension CLLocationManager: HasDelegate {
     public typealias Delegate = CLLocationManagerDelegate
 }
-
-
 
 
 class RxCLLocationManagerDelegateProxy: DelegateProxy<CLLocationManager, CLLocationManagerDelegate>,
@@ -33,9 +32,6 @@ class RxCLLocationManagerDelegateProxy: DelegateProxy<CLLocationManager, CLLocat
 }
 
 
-
-
-
 public extension Reactive where Base: CLLocationManager {
     
     var delegate: DelegateProxy<CLLocationManager, CLLocationManagerDelegate> {
@@ -46,16 +42,16 @@ public extension Reactive where Base: CLLocationManager {
         return delegate
             .methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didUpdateLocations:)))
             .map { parameters in
-                return parameters[1] as! [CLLocation]
-        }
+                parameters[1] as! [CLLocation]
+            }
     }
     
     var isLocationPermissionGranted: Observable<Bool> {
         return delegate
             .methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didFailWithError:)))
             .map { parameters in
-            return (parameters[1] as? Error) != nil
-        }
+                (parameters[1] as? Error) == nil
+            }
     }
     
 }

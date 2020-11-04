@@ -10,9 +10,15 @@ import RxCocoa
 import CoreLocation
 import MapKit
 
-final class ApiController {
+protocol ApiRequestable {
+    func request(method: String,
+                 pathComponent: String,
+                 params: [(String, String)]) -> Observable<Data>
+}
+
+final class ApiClient: ApiRequestable {
     
-    private let apiKey = "66687e09dee0508032ac82d5785ee2ad"
+    private let apiKey = BehaviorSubject<String>(value: "66687e09dee0508032ac82d5785ee2ad")
     private let baseURL = URL(string: "https://api.openweathermap.org/data/2.5")!
     
     init() {
@@ -21,27 +27,15 @@ final class ApiController {
         }
     }
     
-    func currentWeather(city: String) -> Observable<Weather> {
-        return buildRequest(pathComponent: "weather", params: [("q", city)])
-            .map { data in
-                let decoder = JSONDecoder()
-                return try decoder.decode(Weather.self, from: data)
-            }
+    func request(method: String = "GET", pathComponent: String, params: [(String, String)]) -> Observable<Data> {
+        let request = buildRequest(method: method, pathComponent: pathComponent, params: params)
+        return processRequest(request)
     }
     
-    func currentWeather(at coordinate: CLLocationCoordinate2D) -> Observable<Weather> {
-        return buildRequest(pathComponent: "weather", params: [("lat", "\(coordinate.latitude)"),
-                                                               ("lon", "\(coordinate.longitude)")])
-            .map { data in
-                let decoder = JSONDecoder()
-                return try decoder.decode(Weather.self, from: data)
-            }
-    }
-    
-    private func buildRequest(method: String = "GET", pathComponent: String, params: [(String, String)]) -> Observable<Data> {
+    private func buildRequest(method: String = "GET", pathComponent: String, params: [(String, String)]) -> URLRequest {
         let url = baseURL.appendingPathComponent(pathComponent)
         var request = URLRequest(url: url)
-        let keyQueryItem = URLQueryItem(name: "appid", value: apiKey)
+        let keyQueryItem = URLQueryItem(name: "appid", value: try? apiKey.value())
         let unitsQueryItem = URLQueryItem(name: "units", value: "metric")
         let urlComponents = NSURLComponents(url: url, resolvingAgainstBaseURL: true)!
         
@@ -59,47 +53,24 @@ final class ApiController {
         
         request.url = urlComponents.url!
         request.httpMethod = method
-        
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let session = URLSession.shared
-        
-        return session.rx.data(request: request)
+        return request
     }
     
+    private func processRequest(_ request: URLRequest) -> Observable<Data> {
+        let session = URLSession.shared
+        return session.rx.response(request: request).map { tuple in
+            switch tuple.response.statusCode {
+            case 200..<300:
+                return tuple.data
+            case 401:
+                throw ApplicationErrors.ApiClient.invalidToken
+            case 400..<500:
+                throw ApplicationErrors.ApiClient.serverError
+            default:
+                throw ApplicationErrors.ApiClient.serverError
+            }
+        }
+        
+    }
 }
-
-/**
- * Maps an icon information from the API to a local char
- * Source: http://openweathermap.org/weather-conditions
- */
-//public func iconNameToChar(icon: String) -> String {
-//  switch icon {
-//  case "01d":
-//    return "\u{f11b}"
-//  case "01n":
-//    return "\u{f110}"
-//  case "02d":
-//    return "\u{f112}"
-//  case "02n":
-//    return "\u{f104}"
-//  case "03d", "03n":
-//    return "\u{f111}"
-//  case "04d", "04n":
-//    return "\u{f111}"
-//  case "09d", "09n":
-//    return "\u{f116}"
-//  case "10d", "10n":
-//    return "\u{f113}"
-//  case "11d", "11n":
-//    return "\u{f10d}"
-//  case "13d", "13n":
-//    return "\u{f119}"
-//  case "50d", "50n":
-//    return "\u{f10e}"
-//  default:
-//    return "E"
-//  }
-//}
-
-

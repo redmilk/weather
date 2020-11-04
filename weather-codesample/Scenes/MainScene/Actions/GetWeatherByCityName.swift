@@ -9,14 +9,14 @@ import RxSwift
 import RxCocoa
 
 
-extension GetWeatherByCityName: NetworkSupporting,
+extension GetWeatherByCityName: WeatherApiSupporting,
                                 ReachabilitySupporting { }
 
 class GetWeatherByCityName: ActionType {
     
     let cityName: String
     var weather: Observable<Weather> {
-        return apiClient.currentWeather(city: cityName)
+        return api.currentWeather(city: cityName)
     }
     
     init(cityName: String) {

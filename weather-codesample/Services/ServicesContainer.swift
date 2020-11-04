@@ -10,38 +10,25 @@ import UIKit
 fileprivate let services = ServicesContainer()
 
 final class ServicesContainer {
-    lazy var networking: ApiController = { ApiController() }()
+    lazy var baseApiClient: ApiClient = { ApiClient() }()
+    lazy var weatherApi: WeatherApi = { WeatherApi(requestable: ApiClient()) }()
     lazy var reachability: Reachability = { Reachability() }()
     lazy var location: LocationService = { LocationService() }()
     lazy var stateStore: StateStore = { StateStore() }()
 }
 
 // Actions implement these protocols to get needed functionality
-// And only state store is implemented by VC for fetching actual state
 
 /// - Storage of application scene states
 protocol StateStoreSupporting { }
-
 extension StateStoreSupporting {
     var store: StateStore {
         return services.stateStore
     }
 }
 
-/// - Network client
-protocol NetworkSupporting {
-    var apiClient: ApiController { get }
-}
-extension NetworkSupporting {
-    var apiClient: ApiController  {
-        return services.networking
-     }
-}
-
 /// - Location service
-protocol LocationSupporting {
-    var locationService: LocationService { get }
-}
+protocol LocationSupporting { }
 extension LocationSupporting {
     var locationService: LocationService {
         return services.location
@@ -49,12 +36,26 @@ extension LocationSupporting {
 }
 
 /// - Reachability
-protocol ReachabilitySupporting {
-    var reachability: Reachability { get }
-}
+protocol ReachabilitySupporting { }
 extension ReachabilitySupporting {
     var reachability: Reachability {
         return services.reachability
+    }
+}
+
+/// - Common api client
+protocol NetworkSupporting { }
+extension NetworkSupporting {
+    var apiClient: ApiClient  {
+        return services.baseApiClient
+     }
+}
+
+/// - Weather API
+protocol WeatherApiSupporting { }
+extension WeatherApiSupporting {
+    var api: WeatherApi {
+        return services.weatherApi
     }
 }
 

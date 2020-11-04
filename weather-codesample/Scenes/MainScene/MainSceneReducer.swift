@@ -51,7 +51,9 @@ class MainSceneReducer {
                         .map { _ in 1 }
                 }
                 newState.error.accept(error)
-                newState.retryCountText.accept("🔄 REQUEST RETRY LEFT: \(maxRetryTimes - count - 1)")
+                newState.retryCountText.accept("🔄 Request Retry: \(maxRetryTimes - count - 1)")
+                newState.isLoading.accept(false)
+                
                 self.store.mainSceneState.accept(newState)
                 return Observable<Int>
                     .timer(Double(count + 2), scheduler: MainScheduler.instance)
@@ -61,8 +63,8 @@ class MainSceneReducer {
         
         let weatherRequest: (Observable<Weather>) -> Void = { [weak self] weather in
             guard let self = self else { return }
+            newState.isLoading.accept(true)
             return weather.asObservable()
-                .debug("🟧 Weather By City Request")
                 .retryWhen(retryHandler)
                 .materialize()
                 .map { (event) -> MainSceneState in
@@ -84,13 +86,11 @@ class MainSceneReducer {
         /// Request weather by city name
         ///
         case let getWeather as GetWeatherByCityName:
-            newState.isLoading.accept(true)
             weatherRequest(getWeather.weather)
         ///
         /// Current location weather
         ///
         case let locationWeather as GetCurrentLocationWeather:
-            newState.isLoading.accept(true)
             weatherRequest(locationWeather.weather)
             
         default: break

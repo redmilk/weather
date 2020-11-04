@@ -9,17 +9,17 @@ import Foundation
 
 enum ApplicationErrors {
     
-    enum ApiClient {
+    enum ApiClient: Error {
         case cityNotFound
         case invalidToken
         case serverError
     }
     
-    enum Location {
+    enum Location: Error {
         case noPermission
     }
     
-    enum Network {
+    enum Network: Error {
         case noConnection
     }
     

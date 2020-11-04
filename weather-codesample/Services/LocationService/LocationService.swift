@@ -8,14 +8,6 @@
 import CoreLocation
 import RxSwift
 
-/**
-   kCLLocationAccuracyBestForNavigation
-   kCLLocationAccuracyBest
-   kCLLocationAccuracyNearestTenMeters
-   kCLLocationAccuracyHundredMeters
-   kCLLocationAccuracyKilometer
-   kCLLocationAccuracyThreeKilometers
- */
 
 final class LocationService {
     
@@ -28,7 +20,7 @@ final class LocationService {
         case threeKilometers
     }
     
-    public var currentLocation: Observable<CLLocation> {
+    var currentLocation: Observable<CLLocation> {
         return locationManager.rx.didUpdateLocations
             .map { locations in locations[0] }
             .filter { location in
@@ -40,7 +32,7 @@ final class LocationService {
         return locationManager.rx.isLocationPermissionGranted
     }
     
-    public func setAccuracy(_ accuracy: LocationAccuracy) {
+    func setAccuracy(_ accuracy: LocationAccuracy) {
         switch accuracy {
         case .bestForNavigation:
             self.accuracy = kCLLocationAccuracyBestForNavigation
@@ -57,13 +49,13 @@ final class LocationService {
         }
     }
     
-    public func requestPermission() {
+    func requestPermission() {
         self.locationManager.requestWhenInUseAuthorization()
         self.locationManager.startUpdatingLocation()
     }
     
-    init() {
-        accuracy = kCLLocationAccuracyNearestTenMeters
+    init(accuracy: CLLocationAccuracy = kCLLocationAccuracyHundredMeters) {
+        self.accuracy = accuracy
     }
     
     private let locationManager = CLLocationManager()
