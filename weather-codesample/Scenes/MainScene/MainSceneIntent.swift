@@ -15,9 +15,10 @@ class MainSceneIntent {
     enum Action {
         case getWeatherBy(city: String)
         case currentLocationWeather
+        case none
     }
     
-    var action = PublishRelay<Action>()
+    var action = PublishSubject<Action>()
    
     init(reducer: MainSceneReducer) {
         self.reducer = reducer
@@ -36,6 +37,7 @@ class MainSceneIntent {
             reducer.incomingAction.onNext(GetWeatherByCityName(cityName: city))
         case .currentLocationWeather:
             reducer.incomingAction.onNext(GetCurrentLocationWeather())
+        case .none: break
         }
     }
     

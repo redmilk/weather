@@ -13,10 +13,13 @@ import RxCocoa
 // TODO: - Location permission Alert
 // TODO: - Show info view on request retry
 // TODO: - Maybe state should be shared, some of observables must be shared to prevent multiple handlers executing
+// TODO: - Cache/Fetch cache on error
+// TODO: - Letter appear animation
 
 /// Access to state store
 extension MainSceneViewController: StateStoreSupporting,
                                    LocationSupporting { }
+
 
 final class MainSceneViewController: UIViewController {
     
@@ -39,22 +42,40 @@ final class MainSceneViewController: UIViewController {
         let state = store
             .mainSceneState
             .observeOn(MainScheduler.instance)
+            .share(replay: 1)
+        
+        /// Error handling
+        state.flatMap { $0.errorAlertContent }
+            .debug("🍟🍟🍟")
+            .filter { !$0.0.isEmpty && !$0.1.isEmpty }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] tuple in
+                guard let self = self else { return }
+                self.present(simpleAlertWithText: tuple.0, title: tuple.1)
+                    .subscribe()
+                    .disposed(by: self.bag)
+            })
+            .disposed(by: bag)
+            
         
         state
             .flatMap { $0.searchText }
             .asDriver(onErrorJustReturn: "")
             .drive(searchTextField.rx.text)
             .disposed(by: bag)
+        
         state
             .flatMap { $0.temperature }
             .asDriver(onErrorJustReturn: "")
             .drive(tempLabel.rx.text)
             .disposed(by: bag)
+        
         state
             .flatMap { $0.humidity }
             .asDriver(onErrorJustReturn: "")
             .drive(humidityLabel.rx.text)
             .disposed(by: bag)
+        
         state
             .flatMap { $0.isLoading }
             .startWith(false)
@@ -62,36 +83,29 @@ final class MainSceneViewController: UIViewController {
             .asDriver(onErrorJustReturn: false)
             .drive(activityIndicator.rx.isHidden)
             .disposed(by: bag)
+        
         state
             .flatMap { $0.searchText }
-            .asDriver(onErrorJustReturn: "Something went wrong")
+            .asDriver(onErrorJustReturn: "")
             .drive(weatherIconLabel.rx.text)
             .disposed(by: bag)
-        state
-            .flatMap { $0.locationPermission }
-            .filter { $0 == false }
-            .asDriver(onErrorJustReturn: false)
-            .drive(onNext: { [weak self] _ in
-                guard let self = self else { return }
-                self.present(simpleAlertWith: "Warning", message: "Please provide location services permission in Settings app")
-                    .subscribe()
-                    .disposed(by: self.bag)
-            })
-            .disposed(by: bag)
-        state
-            .debug("🔴🔴🔴")
-            .flatMap { $0.error }
-            .observeOn(MainScheduler.instance)
-            .subscribe(onNext: { [weak self] err in
-                guard let self = self else { return }
-                self.present(simpleAlertWith: "Error", message: err.localizedDescription)
-                    .subscribe()
-                    .disposed(by: self.bag)
-            })
-            .disposed(by: bag)
         
-        /// Actions Output
+        locationService
+            .isLocationPermissionGranted
+            .debug("🌀🌀🌀🌀")
+            .subscribe(onNext: { isGranted in
+                print("📱📱📱📱📱 isGranted")
+                print(isGranted)
+            })
+        
+        let noLocationPermission = state
+            .flatMap { $0.locationPermission }
+            .debug("*️⃣*️⃣*️⃣")
+            .observeOn(MainScheduler.instance)
+        
+        /// Actions
         locationButton.rx.controlEvent(.touchUpInside)
+            .debug("👁‍🗨")
             .map { MainSceneIntent.Action.currentLocationWeather }
             .bind(to: intent.action)
             .disposed(by: bag)
@@ -103,16 +117,5 @@ final class MainSceneViewController: UIViewController {
             .bind(to: intent.action)
             .disposed(by: bag)
 
-    }
-    
-    private func showError(text: String, requestRetryText: String) {
-        errorLabel.text = text
-        errorLabel.backgroundColor = .red
-        retryCounterLabel.text = requestRetryText
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.errorLabel.text = ""
-            self?.retryCounterLabel.text = ""
-            self?.errorLabel.backgroundColor = .clear
-        }
     }
 }

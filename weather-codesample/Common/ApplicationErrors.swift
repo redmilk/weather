@@ -10,7 +10,7 @@ import Foundation
 enum ApplicationErrors {
     
     enum ApiClient: Error {
-        case cityNotFound
+        case notFound
         case invalidToken
         case serverError
     }

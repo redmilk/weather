@@ -9,45 +9,46 @@ import CoreLocation
 import RxCocoa
 import RxSwift
 
+
 // MARK: State
-struct MainSceneState: StateType {
+class MainSceneState: StateType {
  
-    var searchText = PublishRelay<String>()
-    var temperature = PublishRelay<String>()
-    var humidity = PublishRelay<String>()
-    var weatherIcon = PublishRelay<String>()
-    var isLoading = PublishRelay<Bool>()
-    var location = PublishRelay<CLLocationCoordinate2D?>()
-    var error = PublishRelay<Error>()
-    var retryCountText = PublishRelay<String>()
-    var locationPermission = PublishRelay<Bool>()
+    var searchText = BehaviorSubject<String>(value: "")
+    var temperature = BehaviorSubject<String>(value: "")
+    var humidity = BehaviorSubject<String>(value: "")
+    var weatherIcon = BehaviorSubject<String>(value: "")
+    var isLoading = PublishSubject<Bool>()
+    var location = PublishSubject<CLLocationCoordinate2D?>()
+    var errorAlertContent = BehaviorSubject<(String, String)>(value: ("", ""))
+    var retryCountText = PublishSubject<String>()
+    var locationPermission = PublishSubject<Bool>()
    
     func updateWeather(_ weather: Weather) {
-        searchText.accept(weather.name ?? "-")
-        temperature.accept(weather.main?.temp?.description ?? "-")
-        humidity.accept(weather.main?.humidity?.description ?? "-")
-        weatherIcon.accept(weather.weather?.first?.icon ?? "-")
+        searchText.onNext(weather.name)
+        temperature.onNext(weather.main.temp.description)
+        humidity.onNext(weather.main.humidity.description)
+        weatherIcon.onNext(weather.weather?.first?.icon ?? "")
     }
         
     func copy() -> MainSceneState {
-        var state = MainSceneState()
+        let state = MainSceneState()
         state.searchText = self.searchText
         state.temperature = self.temperature
         state.humidity = self.humidity
         state.weatherIcon = self.weatherIcon
         state.isLoading = self.isLoading
         state.location = self.location
-        state.error = self.error
+        state.errorAlertContent = self.errorAlertContent
         state.retryCountText = self.retryCountText
         return state
     }
     
     static var initial: MainSceneState {
         let state = MainSceneState()
-        state.searchText.accept("Dnipro")
-        state.weatherIcon.accept("Initial")
-        state.temperature.accept("999")
-        state.humidity.accept("100.0")
+        state.searchText.onNext("Kiev")
+        state.weatherIcon.onNext("Initial")
+        state.temperature.onNext("24")
+        state.humidity.onNext("65")
         return state
     }
 }

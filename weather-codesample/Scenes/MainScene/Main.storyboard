@@ -55,7 +55,7 @@
                                     </stackView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Weather Icon" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eDZ-y6-52K">
                                         <rect key="frame" x="0.0" y="74.5" width="366" height="65.5"/>
-                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="34"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>

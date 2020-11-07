@@ -8,24 +8,16 @@
 import RxSwift
 import RxCocoa
 
-protocol StateStoreWriting {
-    
-}
-
-extension StateStoreWriting {
-    
-}
-
-protocol StateStoreFetching {
-    
-}
+protocol StateStoreWriting { }
+extension StateStoreWriting { }
+protocol StateStoreFetching { }
 
 final class StateStore {
     
-    public let mainSceneState: BehaviorRelay<MainSceneState>
+    public let mainSceneState: BehaviorSubject<MainSceneState>
     
     init() {
-        mainSceneState = BehaviorRelay<MainSceneState>(value: MainSceneState.initial)
+        mainSceneState = BehaviorSubject<MainSceneState>(value: MainSceneState.initial)
     }
     
     private let bag = DisposeBag()

@@ -12,7 +12,8 @@ import Foundation
 
 // MARK: Reducer
 extension MainSceneReducer: StateStoreSupporting,
-                            ReachabilitySupporting { }
+                            LocationSupporting,
+                            FormattingSupporting { }
 
 class MainSceneReducer {
     
@@ -23,77 +24,87 @@ class MainSceneReducer {
         }
     }
     
+    init() {
+        let initialState = (try? store.mainSceneState.value()) ?? .initial
+        self.store.mainSceneState
+            .asObserver()
+            .onNext(formatting.mainSceneFormatter.format(state: initialState))
+    }
+    
     private let bag = DisposeBag()
 
     private func reduce(action: ActionType) {
-        let newState = store.mainSceneState.value
-        reachability.status
-            .map { $0 == .online }
-            .bind(to: newState.locationPermission)
-            .disposed(by: bag)
-        
-        let maxRetryTimes = 4
-        let retryHandler: (Observable<Error>) -> Observable<Int> = { err in
-            return err.enumerated().flatMap { count, error -> Observable<Int> in
-                /// attempts left
-                if count >= maxRetryTimes - 1 {
-                    return Observable.error(error)
-                    /// if connection is offline
-                } else if (error as NSError).code == -1009 {
-                    return self.reachability
-                        .status
-                        .skip(1)
-                        .map { (status: Reachability.Status) -> Bool in
-                            return status == .online
-                        }
-                        .distinctUntilChanged()
-                        .filter { $0 == true }
-                        .map { _ in 1 }
-                }
-                newState.error.accept(error)
-                newState.retryCountText.accept("🔄 Request Retry: \(maxRetryTimes - count - 1)")
-                newState.isLoading.accept(false)
-                
-                self.store.mainSceneState.accept(newState)
-                return Observable<Int>
-                    .timer(Double(count + 2), scheduler: MainScheduler.instance)
-                    .take(1)
-            }
-        }
-        
-        let weatherRequest: (Observable<Weather>) -> Void = { [weak self] weather in
-            guard let self = self else { return }
-            newState.isLoading.accept(true)
-            return weather.asObservable()
-                .retryWhen(retryHandler)
-                .materialize()
-                .map { (event) -> MainSceneState in
-                    newState.isLoading.accept(false)
-                    if let weather = event.element {
-                        newState.updateWeather(weather)
-                    }
-                    if let error = event.error {
-                        newState.error.accept(error)
-                    }
-                    return newState
-                }
-                .bind(to: self.store.mainSceneState)
-                .disposed(by: self.bag)
-        }
+        let newState = (try? store.mainSceneState.value()) ?? formatting.mainSceneFormatter.format(state: .initial)
         
         switch action {
         ///
         /// Request weather by city name
         ///
         case let getWeather as GetWeatherByCityName:
-            weatherRequest(getWeather.weather)
+            newState.isLoading.onNext(true)
+            weatherAction(getWeather.weather, state: newState)
         ///
-        /// Current location weather
+        /// Request weather by current location
         ///
         case let locationWeather as GetCurrentLocationWeather:
-            weatherRequest(locationWeather.weather)
+            newState.isLoading.onNext(true)
+            do {
+                let locationPermission: Bool = try locationService.isLocationPermissionGranted.value()
+                newState.locationPermission.onNext(locationPermission)
+            } catch let error {
+                newState.errorAlertContent.onNext(self.handleError(error))
+                newState.errorAlertContent.onNext(("", ""))
+                newState.isLoading.onNext(false)
+            }
+            weatherAction(locationWeather.weather, state: newState)
             
         default: break
         }
+    }
+    
+    private func weatherAction(_ weather: Observable<Weather>, state: MainSceneState) {
+        return weather.asObservable()
+            .take(1)
+            .map { (weather) -> MainSceneState in
+                state.isLoading.onNext(false)
+                state.updateWeather(weather)
+                return state
+            }
+            .do(onError: { _ in
+                state.isLoading.onNext(false)
+            })
+            .map { self.formatting.mainSceneFormatter.format(state: $0) }
+            .catchError { [weak self] error in
+                guard let self = self else { return Observable.just(state) }
+                //let errorState = self.formatting.mainSceneFormatter.format(state: .initial)
+                state.errorAlertContent.onNext(self.handleError(error))
+                return Observable.just(state)
+            }
+            .bind(to: self.store.mainSceneState)
+            .disposed(by: self.bag)
+    }
+}
+
+// MARK: Error handling
+extension MainSceneReducer: ErrorHandling {
+    func handleError(_ error: Error) -> (String, String) {
+        switch error {
+        case let request as ApplicationErrors.ApiClient:
+            switch request {
+            case .notFound: return ("City not found", ":[")
+            case .serverError: return ("Something went wrong", "Server error")
+            case .invalidToken: return ("Token is invalid", "Required authentication")
+            }
+        case let location as ApplicationErrors.Location:
+            switch location {
+            case .noPermission: return ("Please provide access to location services in Settings app", "No permission")
+            }
+        case let network as ApplicationErrors.Network:
+            switch network {
+            case .noConnection:  return ("Looking for internet connection...", "Internet connection failure")
+            }
+        default: break
+        }
+        return ("", "")
     }
 }

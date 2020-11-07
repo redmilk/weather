@@ -16,10 +16,13 @@ protocol ApiRequestable {
                  params: [(String, String)]) -> Observable<Data>
 }
 
+extension ApiClient: ReachabilitySupporting { }
+
 final class ApiClient: ApiRequestable {
     
     private let apiKey = BehaviorSubject<String>(value: "66687e09dee0508032ac82d5785ee2ad")
     private let baseURL = URL(string: "https://api.openweathermap.org/data/2.5")!
+    private let bag = DisposeBag()
     
     init() {
         Logging.URLRequests = { request in
@@ -29,7 +32,34 @@ final class ApiClient: ApiRequestable {
     
     func request(method: String = "GET", pathComponent: String, params: [(String, String)]) -> Observable<Data> {
         let request = buildRequest(method: method, pathComponent: pathComponent, params: params)
-        return processRequest(request)
+        let maxRetryTimes = 3
+
+        let retryHandler: (Observable<Error>) -> Observable<Int> = { err in
+            return err.enumerated().flatMap { count, error -> Observable<Int> in
+                if count >= maxRetryTimes - 1 {
+                    return Observable.error(error)
+                } else if (error as NSError).code == -1009 {
+                    return self.reachability
+                        .status
+                        .map { (status: Reachability.Status) -> Bool in
+                            return status == .online
+                        }
+                        .distinctUntilChanged()
+                        .debug("🟦")
+                        .do(onNext: { isOnline in
+                            if isOnline == false {
+                                throw ApplicationErrors.Network.noConnection
+                            }
+                        })
+                        .filter { $0 == true }
+                        .map { _ in 1 }
+                }
+                return Observable<Int>
+                    .timer(Double(count + 2), scheduler: MainScheduler.instance)
+                    .take(1)
+            }
+        }
+        return processRequest(request).retryWhen(retryHandler)
     }
     
     private func buildRequest(method: String = "GET", pathComponent: String, params: [(String, String)]) -> URLRequest {
@@ -65,7 +95,12 @@ final class ApiClient: ApiRequestable {
                 return tuple.data
             case 401:
                 throw ApplicationErrors.ApiClient.invalidToken
+            case 404:
+                print("🌭🌭🌭🌭🌭🌭 Throw not found")
+                throw ApplicationErrors.ApiClient.notFound
             case 400..<500:
+                throw ApplicationErrors.ApiClient.serverError
+            case -1009:
                 throw ApplicationErrors.ApiClient.serverError
             default:
                 throw ApplicationErrors.ApiClient.serverError

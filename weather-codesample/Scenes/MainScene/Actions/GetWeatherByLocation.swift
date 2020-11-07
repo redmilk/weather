@@ -21,8 +21,8 @@ struct GetCurrentLocationWeather: ActionType {
             .do(onSubscribe: {
                 locationService.requestPermission()
             })
-            .take(1)
-            .catchErrorJustReturn(Weather())
+            //.take(1)
+            //.catchErrorJustReturn(Weather())
     }
     
     private let bag = DisposeBag()

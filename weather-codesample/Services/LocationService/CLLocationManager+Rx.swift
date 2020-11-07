@@ -50,7 +50,12 @@ public extension Reactive where Base: CLLocationManager {
         return delegate
             .methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didFailWithError:)))
             .map { parameters in
-                (parameters[1] as? Error) == nil
+                let error = (parameters[1] as? CLError)
+                print("📡📡📡 🟥")
+                if error!.errorCode == 1 {
+                    throw ApplicationErrors.Location.noPermission
+                }
+                return !(error!.errorCode == 1)
             }
     }
     

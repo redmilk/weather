@@ -7,6 +7,7 @@
 
 import CoreLocation
 import RxSwift
+import RxCocoa
 
 
 final class LocationService {
@@ -28,9 +29,7 @@ final class LocationService {
             }
     }
     
-    var isLocationPermissionGranted: Observable<Bool> {
-        return locationManager.rx.isLocationPermissionGranted
-    }
+    var isLocationPermissionGranted = BehaviorSubject<Bool>(value: true)
     
     func setAccuracy(_ accuracy: LocationAccuracy) {
         switch accuracy {
@@ -56,6 +55,10 @@ final class LocationService {
     
     init(accuracy: CLLocationAccuracy = kCLLocationAccuracyHundredMeters) {
         self.accuracy = accuracy
+        self.locationManager.rx
+            .isLocationPermissionGranted
+            .bind(to: isLocationPermissionGranted)
+            .disposed(by: bag)
     }
     
     private let locationManager = CLLocationManager()

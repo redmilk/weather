@@ -15,6 +15,7 @@ final class ServicesContainer {
     lazy var reachability: Reachability = { Reachability() }()
     lazy var location: LocationService = { LocationService() }()
     lazy var stateStore: StateStore = { StateStore() }()
+    lazy var formatting: FormattingService = { FormattingService() }()
 }
 
 // Actions implement these protocols to get needed functionality
@@ -56,6 +57,14 @@ protocol WeatherApiSupporting { }
 extension WeatherApiSupporting {
     var api: WeatherApi {
         return services.weatherApi
+    }
+}
+
+/// - Formatting
+protocol FormattingSupporting { }
+extension FormattingSupporting {
+    var formatting: FormattingService {
+        return services.formatting
     }
 }
 
