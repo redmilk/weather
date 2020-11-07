@@ -17,8 +17,7 @@ import RxCocoa
 // TODO: - Letter appear animation
 
 /// Access to state store
-extension MainSceneViewController: StateStoreSupporting,
-                                   LocationSupporting { }
+extension MainSceneViewController: StateStoreSupporting { }
 
 
 final class MainSceneViewController: UIViewController {
@@ -38,6 +37,7 @@ final class MainSceneViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         /// State Input
         let state = store
             .mainSceneState
@@ -46,7 +46,7 @@ final class MainSceneViewController: UIViewController {
         
         /// Error handling
         state.flatMap { $0.errorAlertContent }
-            .debug("🍟🍟🍟")
+            .unwrap()
             .filter { !$0.0.isEmpty && !$0.1.isEmpty }
             .observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak self] tuple in
@@ -89,23 +89,10 @@ final class MainSceneViewController: UIViewController {
             .asDriver(onErrorJustReturn: "")
             .drive(weatherIconLabel.rx.text)
             .disposed(by: bag)
-        
-        locationService
-            .isLocationPermissionGranted
-            .debug("🌀🌀🌀🌀")
-            .subscribe(onNext: { isGranted in
-                print("📱📱📱📱📱 isGranted")
-                print(isGranted)
-            })
-        
-        let noLocationPermission = state
-            .flatMap { $0.locationPermission }
-            .debug("*️⃣*️⃣*️⃣")
-            .observeOn(MainScheduler.instance)
+
         
         /// Actions
         locationButton.rx.controlEvent(.touchUpInside)
-            .debug("👁‍🗨")
             .map { MainSceneIntent.Action.currentLocationWeather }
             .bind(to: intent.action)
             .disposed(by: bag)

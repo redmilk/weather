@@ -19,7 +19,7 @@ class MainSceneState: StateType {
     var weatherIcon = BehaviorSubject<String>(value: "")
     var isLoading = PublishSubject<Bool>()
     var location = PublishSubject<CLLocationCoordinate2D?>()
-    var errorAlertContent = BehaviorSubject<(String, String)>(value: ("", ""))
+    var errorAlertContent = BehaviorSubject<(String, String)?>(value: nil)
     var retryCountText = PublishSubject<String>()
     var locationPermission = PublishSubject<Bool>()
    

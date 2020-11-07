@@ -8,5 +8,6 @@
 import RxSwift
 
 protocol ErrorHandling {
-    func handleError(_ error: Error) -> (String, String)
+    typealias ErrorContent = (String, String)?
+    func handleError(_ error: Error) -> ErrorContent
 }

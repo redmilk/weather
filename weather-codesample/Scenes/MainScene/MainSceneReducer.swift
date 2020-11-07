@@ -8,6 +8,7 @@
 import RxSwift
 import RxCocoa
 import Foundation
+import CoreLocation
 
 
 // MARK: Reducer
@@ -47,13 +48,23 @@ class MainSceneReducer {
         /// Request weather by current location
         ///
         case let locationWeather as GetCurrentLocationWeather:
+            
+            
             newState.isLoading.onNext(true)
             do {
-                let locationPermission: Bool = try locationService.isLocationPermissionGranted.value()
-                newState.locationPermission.onNext(locationPermission)
+                let locationPermission: CLAuthorizationStatus = try locationService.isLocationPermissionGranted.value()
+                switch locationPermission {
+                case .denied, .restricted:
+                    newState.errorAlertContent.onNext(self.handleError(ApplicationErrors.Location.noPermission))
+                    newState.locationPermission.onNext(false)
+                    newState.isLoading.onNext(false)
+                case .authorizedAlways, .authorizedWhenInUse:
+                    newState.locationPermission.onNext(true)
+                case .notDetermined: break
+                }
             } catch let error {
                 newState.errorAlertContent.onNext(self.handleError(error))
-                newState.errorAlertContent.onNext(("", ""))
+                newState.errorAlertContent.onNext(nil)
                 newState.isLoading.onNext(false)
             }
             weatherAction(locationWeather.weather, state: newState)
@@ -76,8 +87,8 @@ class MainSceneReducer {
             .map { self.formatting.mainSceneFormatter.format(state: $0) }
             .catchError { [weak self] error in
                 guard let self = self else { return Observable.just(state) }
-                //let errorState = self.formatting.mainSceneFormatter.format(state: .initial)
                 state.errorAlertContent.onNext(self.handleError(error))
+                state.errorAlertContent.onNext(nil)
                 return Observable.just(state)
             }
             .bind(to: self.store.mainSceneState)
@@ -87,7 +98,7 @@ class MainSceneReducer {
 
 // MARK: Error handling
 extension MainSceneReducer: ErrorHandling {
-    func handleError(_ error: Error) -> (String, String) {
+    func handleError(_ error: Error) -> (String, String)? {
         switch error {
         case let request as ApplicationErrors.ApiClient:
             switch request {
@@ -105,6 +116,6 @@ extension MainSceneReducer: ErrorHandling {
             }
         default: break
         }
-        return ("", "")
+        return nil
     }
 }
