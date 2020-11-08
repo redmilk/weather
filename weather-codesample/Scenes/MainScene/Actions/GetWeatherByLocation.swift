@@ -7,6 +7,7 @@
 
 import RxSwift
 import RxCocoa
+import CoreLocation
 
 
 extension GetCurrentLocationWeather: WeatherApiSupporting,
@@ -21,9 +22,5 @@ struct GetCurrentLocationWeather: ActionType {
             .do(onSubscribe: {
                 locationService.requestPermission()
             })
-            //.take(1)
-            //.catchErrorJustReturn(Weather())
     }
-    
-    private let bag = DisposeBag()
 }

@@ -23,6 +23,7 @@ final class ApiClient: ApiRequestable {
     private let apiKey = BehaviorSubject<String>(value: "66687e09dee0508032ac82d5785ee2ad")
     private let baseURL = URL(string: "https://api.openweathermap.org/data/2.5")!
     private let bag = DisposeBag()
+    let requestRetryMessage = BehaviorRelay<String?>(value: nil)
     
     init() {
         Logging.URLRequests = { request in
@@ -44,16 +45,13 @@ final class ApiClient: ApiRequestable {
                         .map { (status: Reachability.Status) -> Bool in
                             return status == .online
                         }
-                        .distinctUntilChanged()
                         .debug("🟦")
-                        .do(onNext: { isOnline in
-                            if isOnline == false {
-                                throw ApplicationErrors.Network.noConnection
-                            }
-                        })
+                        .distinctUntilChanged()
                         .filter { $0 == true }
                         .map { _ in 1 }
                 }
+                self.requestRetryMessage.accept("Retry")
+                self.requestRetryMessage.accept(nil)
                 return Observable<Int>
                     .timer(Double(count + 2), scheduler: MainScheduler.instance)
                     .take(1)

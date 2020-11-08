@@ -77,19 +77,30 @@ final class MainSceneViewController: UIViewController {
             .disposed(by: bag)
         
         state
-            .flatMap { $0.isLoading }
-            .startWith(false)
-            .map { !$0 }
-            .asDriver(onErrorJustReturn: false)
-            .drive(activityIndicator.rx.isHidden)
-            .disposed(by: bag)
-        
-        state
             .flatMap { $0.searchText }
             .asDriver(onErrorJustReturn: "")
             .drive(weatherIconLabel.rx.text)
             .disposed(by: bag)
 
+        let loading = state
+            .flatMap { $0.isLoading }
+            .startWith(false)
+            .asDriver(onErrorJustReturn: false)
+        
+        loading
+            .map { !$0 }
+            .drive(activityIndicator.rx.isHidden)
+            .disposed(by: bag)
+        
+        loading
+            .map { !$0 }
+            .drive(locationButton.rx.isEnabled)
+            .disposed(by: bag)
+        
+        loading
+            .map { !$0 }
+            .drive(searchTextField.rx.isEnabled)
+            .disposed(by: bag)
         
         /// Actions
         locationButton.rx.controlEvent(.touchUpInside)

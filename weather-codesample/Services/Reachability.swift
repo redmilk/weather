@@ -23,17 +23,14 @@ final class Reachability {
         }
     }
     
-    static private var _status = BehaviorRelay<Status>(value: .unknown)
-    private var reachability: SCNetworkReachability?
-    private let bag = DisposeBag()
-
-    var status: Observable<Status>
+    public var status = BehaviorRelay<Status>(value: .online)
     
     init() {
-        status = Reachability
-            ._status
-            .asObservable()
-            .distinctUntilChanged()
+        Reachability._status
+            .skip(1)
+            .bind(to: status)
+            .disposed(by: bag)
+        
         startMonitor("google.com")
     }
     
@@ -46,7 +43,7 @@ final class Reachability {
         if let reachability = SCNetworkReachabilityCreateWithName(nil, host) {
             SCNetworkReachabilitySetCallback(reachability, { (_, flags, _) in
                 let status = Status(reachabilityFlags: flags)
-                /// unable to capture self, thus _status is static
+                /// unable to capture self here
                 Reachability._status.accept(status)
             }, &context)
             
@@ -62,4 +59,7 @@ final class Reachability {
         }
     }
     
+    static private var _status = BehaviorRelay<Status>(value: .unknown)
+    private var reachability: SCNetworkReachability?
+    private let bag = DisposeBag()
 }

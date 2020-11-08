@@ -29,7 +29,7 @@ final class LocationService {
             }
     }
     
-    var isLocationPermissionGranted = BehaviorSubject<CLAuthorizationStatus>(value: .notDetermined)
+    var locationServicesAuthorizationStatus = BehaviorSubject<CLAuthorizationStatus?>(value: nil)
     
     func setAccuracy(_ accuracy: LocationAccuracy) {
         switch accuracy {
@@ -53,15 +53,19 @@ final class LocationService {
         self.locationManager.startUpdatingLocation()
     }
     
+    func locationServicesEnabled() -> Bool {
+        return CLLocationManager.locationServicesEnabled() && (CLLocationManager.authorizationStatus() == .authorizedWhenInUse || CLLocationManager.authorizationStatus() == .authorizedAlways)
+    }
+    
     init(accuracy: CLLocationAccuracy = kCLLocationAccuracyHundredMeters) {
         self.accuracy = accuracy
         self.locationManager.rx
             .didChangeAuthorizationStatus
-            .bind(to: isLocationPermissionGranted)
+            .bind(to: locationServicesAuthorizationStatus)
             .disposed(by: bag)
     }
     
     private let locationManager = CLLocationManager()
     private var accuracy: CLLocationAccuracy
-    private let bag = DisposeBag()    
+    private let bag = DisposeBag() 
 }

@@ -49,19 +49,17 @@ public extension Reactive where Base: CLLocationManager {
     var didChangeAuthorizationStatus: Observable<CLAuthorizationStatus> {
         return delegate.methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didChangeAuthorization:)))
             .map { parameters in
-                print("🌪")
-                print(parameters[1] as! Int32)
                 return CLAuthorizationStatus(rawValue: parameters[1] as! Int32)
             }
             .unwrap()
     }
     
-    var isFailedWithPermissionError: Observable<Bool> {
+    var didFailWithError: Observable<Error> {
         return delegate
             .methodInvoked(#selector(CLLocationManagerDelegate.locationManager(_:didFailWithError:)))
             .map { parameters in
-                let error = (parameters[1] as? CLError)
-                return error!.errorCode == 1
+                return parameters[1] as? CLError
             }
+            .unwrap()
     }
 }

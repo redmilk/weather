@@ -14,7 +14,8 @@ import CoreLocation
 // MARK: Reducer
 extension MainSceneReducer: StateStoreSupporting,
                             LocationSupporting,
-                            FormattingSupporting { }
+                            FormattingSupporting,
+                            ReachabilitySupporting { }
 
 class MainSceneReducer {
     
@@ -38,42 +39,33 @@ class MainSceneReducer {
         let newState = (try? store.mainSceneState.value()) ?? formatting.mainSceneFormatter.format(state: .initial)
         
         switch action {
-        ///
+        
         /// Request weather by city name
-        ///
         case let getWeather as GetWeatherByCityName:
-            newState.isLoading.onNext(true)
-            weatherAction(getWeather.weather, state: newState)
-        ///
-        /// Request weather by current location
-        ///
-        case let locationWeather as GetCurrentLocationWeather:
-            
-            
-            newState.isLoading.onNext(true)
-            do {
-                let locationPermission: CLAuthorizationStatus = try locationService.isLocationPermissionGranted.value()
-                switch locationPermission {
-                case .denied, .restricted:
-                    newState.errorAlertContent.onNext(self.handleError(ApplicationErrors.Location.noPermission))
-                    newState.locationPermission.onNext(false)
-                    newState.isLoading.onNext(false)
-                case .authorizedAlways, .authorizedWhenInUse:
-                    newState.locationPermission.onNext(true)
-                case .notDetermined: break
-                }
-            } catch let error {
-                newState.errorAlertContent.onNext(self.handleError(error))
+            if reachability.status.value != .online {
+                newState.errorAlertContent.onNext(self.handleError(ApplicationErrors.Network.noConnection))
                 newState.errorAlertContent.onNext(nil)
-                newState.isLoading.onNext(false)
             }
-            weatherAction(locationWeather.weather, state: newState)
+            loadWeather(getWeather.weather, state: newState)
+            
+        /// Request weather by current location
+        case let locationWeather as GetCurrentLocationWeather:
+            if reachability.status.value != .online {
+                newState.errorAlertContent.onNext(self.handleError(ApplicationErrors.Network.noConnection))
+                newState.errorAlertContent.onNext(nil)
+            }
+            guard locationService.locationServicesEnabled() else {
+                newState.errorAlertContent.onNext(self.handleError(ApplicationErrors.Location.noPermission))
+                return
+            }
+            loadWeather(locationWeather.weather, state: newState)
             
         default: break
         }
     }
     
-    private func weatherAction(_ weather: Observable<Weather>, state: MainSceneState) {
+    private func loadWeather(_ weather: Observable<Weather>, state: MainSceneState) {
+        state.isLoading.onNext(true)
         return weather.asObservable()
             .take(1)
             .map { (weather) -> MainSceneState in

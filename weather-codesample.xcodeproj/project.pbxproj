@@ -248,12 +248,20 @@
 		798603B925523BEC005C115E /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				79DD56022557418E00B74BB9 /* Constants */,
 				79169A11254C436B008F9546 /* Utils */,
 				79169A8E254F7B4D008F9546 /* Extensions */,
 				79169A37254C917B008F9546 /* Protocols */,
 				798603BA25523BFF005C115E /* ApplicationErrors.swift */,
 			);
 			path = Common;
+			sourceTree = "<group>";
+		};
+		79DD56022557418E00B74BB9 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Constants;
 			sourceTree = "<group>";
 		};
 		8003BF79FB5D58D17A339DF4 /* Pods */ = {

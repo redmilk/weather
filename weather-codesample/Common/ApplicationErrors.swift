@@ -23,4 +23,7 @@ enum ApplicationErrors {
         case noConnection
     }
     
+    enum Unexpected: Error {
+        case internalInconsistency
+    }
 }
