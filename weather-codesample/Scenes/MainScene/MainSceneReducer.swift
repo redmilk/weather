@@ -15,7 +15,8 @@ import CoreLocation
 extension MainSceneReducer: StateStoreSupporting,
                             LocationSupporting,
                             FormattingSupporting,
-                            ReachabilitySupporting { }
+                            ReachabilitySupporting,
+                            NetworkSupporting { }
 
 class MainSceneReducer {
     
@@ -26,17 +27,34 @@ class MainSceneReducer {
         }
     }
     
+    lazy var actualState: BehaviorSubject<MainSceneState> = {
+        let formatted = formatting.mainSceneFormatter.format(state: .initial)
+        let state = BehaviorSubject<MainSceneState>(value: formatted)
+        return state
+    }()
+    
     init() {
-        let initialState = (try? store.mainSceneState.value()) ?? .initial
-        self.store.mainSceneState
-            .asObserver()
-            .onNext(formatting.mainSceneFormatter.format(state: initialState))
+        /// bind state to state store
+        actualState
+            .asObservable()
+            .bind(to: store.mainSceneState)
+            .disposed(by: bag)
+        
+        ApiClient.requestRetryMessage
+            .filter { !$0.isEmpty }
+            .subscribe(onNext: { msg in
+                let state = try? self.actualState.value()
+                state?.requestRetryText.onNext(msg)
+                state?.requestRetryText.onNext("")
+            })
+        .disposed(by: bag)
     }
     
     private let bag = DisposeBag()
 
     private func reduce(action: ActionType) {
-        let newState = (try? store.mainSceneState.value()) ?? formatting.mainSceneFormatter.format(state: .initial)
+        let newState = (try? actualState.value()) ?? formatting.mainSceneFormatter.format(state: .initial)
+        newState.requestRetryText.onNext(ApiClient.requestRetryMessage.value)
         
         switch action {
         
@@ -56,6 +74,7 @@ class MainSceneReducer {
             }
             guard locationService.locationServicesEnabled() else {
                 newState.errorAlertContent.onNext(self.handleError(ApplicationErrors.Location.noPermission))
+                newState.errorAlertContent.onNext(nil)
                 return
             }
             loadWeather(locationWeather.weather, state: newState)
@@ -83,7 +102,7 @@ class MainSceneReducer {
                 state.errorAlertContent.onNext(nil)
                 return Observable.just(state)
             }
-            .bind(to: self.store.mainSceneState)
+            .bind(to: self.actualState)
             .disposed(by: self.bag)
     }
 }
@@ -100,7 +119,7 @@ extension MainSceneReducer: ErrorHandling {
             }
         case let location as ApplicationErrors.Location:
             switch location {
-            case .noPermission: return ("Please provide access to location services in Settings app", "No permission")
+            case .noPermission: return ("Please provide access to location services in Settings app", "No location access")
             }
         case let network as ApplicationErrors.Network:
             switch network {

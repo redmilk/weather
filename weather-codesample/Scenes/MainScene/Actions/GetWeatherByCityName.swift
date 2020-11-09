@@ -21,7 +21,6 @@ class GetWeatherByCityName: ActionType {
     
     init(cityName: String) {
         self.cityName = cityName
-        
     }
     
 }

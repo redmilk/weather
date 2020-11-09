@@ -19,9 +19,9 @@ class MainSceneState: StateType {
     var weatherIcon = BehaviorSubject<String>(value: "")
     var isLoading = PublishSubject<Bool>()
     var location = PublishSubject<CLLocationCoordinate2D?>()
-    var errorAlertContent = BehaviorSubject<(String, String)?>(value: nil)
-    var retryCountText = PublishSubject<String>()
+    var requestRetryText = PublishSubject<String>()
     var locationPermission = PublishSubject<Bool>()
+    var errorAlertContent = BehaviorSubject<(String, String)?>(value: nil)
    
     func updateWeather(_ weather: Weather) {
         searchText.onNext(weather.name)
@@ -39,7 +39,8 @@ class MainSceneState: StateType {
         state.isLoading = self.isLoading
         state.location = self.location
         state.errorAlertContent = self.errorAlertContent
-        state.retryCountText = self.retryCountText
+        state.requestRetryText = self.requestRetryText
+        state.errorAlertContent = self.errorAlertContent
         return state
     }
     

@@ -21,4 +21,22 @@ extension UIViewController {
             }
         }
     }
+    
+    func present(alertWithActionAndText text: String, title: String, actionTitle: String, action: @escaping () -> Void) -> Completable {
+        Completable.create { (completable) -> Disposable in
+            let alert = UIAlertController(title: title, message: text, preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "Close", style: .default, handler: { _ in
+                completable(.completed)
+            }))
+            alert.addAction(UIAlertAction(title: "Go to Settings", style: .default, handler: { _ in
+                action()
+                completable(.completed)
+            }))
+            self.present(alert, animated: true, completion: nil)
+            return Disposables.create {
+                self.dismiss(animated: true, completion: nil)
+            }
+        }
+    }
+
 }

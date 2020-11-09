@@ -17,7 +17,7 @@ import RxCocoa
 // TODO: - Letter appear animation
 
 /// Access to state store
-extension MainSceneViewController: StateStoreSupporting { }
+extension MainSceneViewController: StateStoreSupporting, NetworkSupporting { }
 
 
 final class MainSceneViewController: UIViewController {
@@ -29,7 +29,6 @@ final class MainSceneViewController: UIViewController {
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var locationButton: UIButton!
     @IBOutlet private weak var errorLabel: UILabel!
-    @IBOutlet private weak var retryCounterLabel: UILabel!
     
     private var intent = MainSceneIntent(reducer: MainSceneReducer())
     private let bag = DisposeBag()
@@ -37,26 +36,24 @@ final class MainSceneViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        /// Actions
+        locationButton.rx.controlEvent(.touchUpInside)
+            .map { MainSceneIntent.Action.currentLocationWeather }
+            .bind(to: intent.action)
+            .disposed(by: bag)
+        
+        searchTextField.rx.controlEvent(.editingDidEndOnExit)
+            .map { self.searchTextField.text ?? nil }
+            .unwrap()
+            .map { MainSceneIntent.Action.getWeatherBy(city: $0) }
+            .bind(to: intent.action)
+            .disposed(by: bag)
         
         /// State Input
         let state = store
             .mainSceneState
             .observeOn(MainScheduler.instance)
             .share(replay: 1)
-        
-        /// Error handling
-        state.flatMap { $0.errorAlertContent }
-            .unwrap()
-            .filter { !$0.0.isEmpty && !$0.1.isEmpty }
-            .observeOn(MainScheduler.instance)
-            .subscribe(onNext: { [weak self] tuple in
-                guard let self = self else { return }
-                self.present(simpleAlertWithText: tuple.0, title: tuple.1)
-                    .subscribe()
-                    .disposed(by: self.bag)
-            })
-            .disposed(by: bag)
-            
         
         state
             .flatMap { $0.searchText }
@@ -102,18 +99,39 @@ final class MainSceneViewController: UIViewController {
             .drive(searchTextField.rx.isEnabled)
             .disposed(by: bag)
         
-        /// Actions
-        locationButton.rx.controlEvent(.touchUpInside)
-            .map { MainSceneIntent.Action.currentLocationWeather }
-            .bind(to: intent.action)
+        /// Request retry text
+        state
+            .flatMap { $0.requestRetryText }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] msg in
+                self?.errorLabel.text = msg
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    self?.errorLabel.text = ""
+                }
+            })
             .disposed(by: bag)
         
-        searchTextField.rx.controlEvent(.editingDidEndOnExit)
-            .map { self.searchTextField.text ?? "" }
-            .filter { !$0.isEmpty }
-            .map { MainSceneIntent.Action.getWeatherBy(city: $0) }
-            .bind(to: intent.action)
+        /// Error handling happens in Reducer and VC gets only data to present
+        /// VC concerns about how to present different types of error
+        state.flatMap { $0.errorAlertContent }
+            .unwrap()
+            .filter { !$0.0.isEmpty && !$0.1.isEmpty }
+            .observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] (errorData: (msg: String, title: String)) -> Void in
+                guard let self = self else { return }
+                if errorData.title == "No location access" {
+                    self.present(alertWithActionAndText: errorData.msg, title: errorData.title, actionTitle: "Go to Settings") {
+                        Helper.openSettings()
+                    }
+                    .subscribe()
+                    .disposed(by: self.bag)
+                } else {
+                    self.present(simpleAlertWithText: errorData.msg, title: errorData.title)
+                        .subscribe()
+                        .disposed(by: self.bag)
+                }
+            })
             .disposed(by: bag)
-
     }
+    
 }

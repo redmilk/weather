@@ -18,5 +18,11 @@ enum Helper {
         return image ?? UIImage()
     }
     
+    static func openSettings() {
+        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+           UIApplication.shared.open(settingsUrl)
+         }
+    }
+    
 }
 

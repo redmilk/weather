@@ -13,7 +13,8 @@ import MapKit
 protocol ApiRequestable {
     func request(method: String,
                  pathComponent: String,
-                 params: [(String, String)]) -> Observable<Data>
+                 params: [(String, String)],
+                 maxRetry: Int) -> Observable<Data>
 }
 
 extension ApiClient: ReachabilitySupporting { }
@@ -23,21 +24,19 @@ final class ApiClient: ApiRequestable {
     private let apiKey = BehaviorSubject<String>(value: "66687e09dee0508032ac82d5785ee2ad")
     private let baseURL = URL(string: "https://api.openweathermap.org/data/2.5")!
     private let bag = DisposeBag()
-    let requestRetryMessage = BehaviorRelay<String?>(value: nil)
+    static let requestRetryMessage = BehaviorRelay<String>(value: "")
     
     init() {
         Logging.URLRequests = { request in
             return true
         }
     }
-    
-    func request(method: String = "GET", pathComponent: String, params: [(String, String)]) -> Observable<Data> {
+  
+    func request(method: String = "GET", pathComponent: String, params: [(String, String)], maxRetry: Int) -> Observable<Data> {
         let request = buildRequest(method: method, pathComponent: pathComponent, params: params)
-        let maxRetryTimes = 3
-
         let retryHandler: (Observable<Error>) -> Observable<Int> = { err in
             return err.enumerated().flatMap { count, error -> Observable<Int> in
-                if count >= maxRetryTimes - 1 {
+                if count >= maxRetry - 1 {
                     return Observable.error(error)
                 } else if (error as NSError).code == -1009 {
                     return self.reachability
@@ -45,13 +44,11 @@ final class ApiClient: ApiRequestable {
                         .map { (status: Reachability.Status) -> Bool in
                             return status == .online
                         }
-                        .debug("🟦")
                         .distinctUntilChanged()
                         .filter { $0 == true }
                         .map { _ in 1 }
                 }
-                self.requestRetryMessage.accept("Retry")
-                self.requestRetryMessage.accept(nil)
+                ApiClient.requestRetryMessage.accept("🟥🟥🟥 Retry attempt: \(count + 1)")
                 return Observable<Int>
                     .timer(Double(count + 2), scheduler: MainScheduler.instance)
                     .take(1)
@@ -88,13 +85,13 @@ final class ApiClient: ApiRequestable {
     private func processRequest(_ request: URLRequest) -> Observable<Data> {
         let session = URLSession.shared
         return session.rx.response(request: request).map { tuple in
+            ApiClient.requestRetryMessage.accept("")
             switch tuple.response.statusCode {
             case 200..<300:
                 return tuple.data
             case 401:
                 throw ApplicationErrors.ApiClient.invalidToken
             case 404:
-                print("🌭🌭🌭🌭🌭🌭 Throw not found")
                 throw ApplicationErrors.ApiClient.notFound
             case 400..<500:
                 throw ApplicationErrors.ApiClient.serverError

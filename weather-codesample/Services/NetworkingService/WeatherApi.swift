@@ -7,6 +7,8 @@
 
 import RxSwift
 
+fileprivate let weatherRequestMaxRetry: Int = 5
+
 struct WeatherApi {
     
     private let api: ApiRequestable
@@ -19,7 +21,8 @@ struct WeatherApi {
         return api
             .request(method: "GET",
                      pathComponent: "weather",
-                     params: [("q", city)]
+                     params: [("q", city)],
+                     maxRetry: weatherRequestMaxRetry
             )
             .map { data in
                 let decoder = JSONDecoder()
@@ -31,7 +34,8 @@ struct WeatherApi {
         return api
             .request(method: "GET",
                      pathComponent: "weather",
-                     params: [("lat", "\(lat)"), ("lon", "\(lon)")])
+                     params: [("lat", "\(lat)"), ("lon", "\(lon)")],
+                     maxRetry: weatherRequestMaxRetry)
             .map { data in
                 let decoder = JSONDecoder()
                 return try decoder.decode(Weather.self, from: data)
