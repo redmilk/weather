@@ -45,7 +45,6 @@ class MainSceneReducer {
             .subscribe(onNext: { msg in
                 let state = try? self.actualState.value()
                 state?.requestRetryText.onNext(msg)
-                state?.requestRetryText.onNext("")
             })
         .disposed(by: bag)
     }
