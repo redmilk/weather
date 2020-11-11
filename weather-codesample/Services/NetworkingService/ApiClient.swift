@@ -85,6 +85,10 @@ final class ApiClient: ApiRequestable {
     }
     
     private func processRequest(_ request: URLRequest) -> Observable<Data> {
+        if let url = request.url?.absoluteString,
+           let data = internalCache[url] {
+            return Observable.just(data)
+        }
         let session = URLSession.shared
         return session.rx.response(request: request)
             .cache()
