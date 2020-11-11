@@ -10,6 +10,8 @@ import RxCocoa
 import CoreLocation
 import MapKit
 
+fileprivate var internalCache = [String: Data]()
+
 protocol ApiRequestable {
     func request(method: String,
                  pathComponent: String,
@@ -84,23 +86,35 @@ final class ApiClient: ApiRequestable {
     
     private func processRequest(_ request: URLRequest) -> Observable<Data> {
         let session = URLSession.shared
-        return session.rx.response(request: request).map { tuple in
-            ApiClient.requestRetryMessage.accept("")
-            switch tuple.response.statusCode {
-            case 200..<300:
-                return tuple.data
-            case 401:
-                throw ApplicationErrors.ApiClient.invalidToken
-            case 404:
-                throw ApplicationErrors.ApiClient.notFound
-            case 400..<500:
-                throw ApplicationErrors.ApiClient.serverError
-            case -1009:
-                throw ApplicationErrors.ApiClient.serverError
-            default:
-                throw ApplicationErrors.ApiClient.serverError
+        return session.rx.response(request: request)
+            .cache()
+            .map { tuple in
+                ApiClient.requestRetryMessage.accept("")
+                switch tuple.response.statusCode {
+                case 200..<300:
+                    return tuple.data
+                case 401:
+                    throw ApplicationErrors.ApiClient.invalidToken
+                case 404:
+                    throw ApplicationErrors.ApiClient.notFound
+                case 400..<500:
+                    throw ApplicationErrors.ApiClient.serverError
+                case -1009:
+                    throw ApplicationErrors.ApiClient.serverError
+                default:
+                    throw ApplicationErrors.ApiClient.serverError
+                }
             }
-        }
         
+    }
+}
+
+extension ObservableType where Element == (response: HTTPURLResponse, data: Data) {
+    func cache() -> Observable<Element> {
+        return self.do(onNext: { response, data in
+            guard let url = response.url?.absoluteString,
+                  200..<300 ~= response.statusCode else { return }
+            internalCache[url] = data
+        })
     }
 }
