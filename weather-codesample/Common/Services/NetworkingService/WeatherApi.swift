@@ -24,10 +24,7 @@ struct WeatherApi {
                      params: [("q", city)],
                      maxRetry: weatherRequestMaxRetry
             )
-            .map { data in
-                let decoder = JSONDecoder()
-                return try decoder.decode(Weather.self, from: data)
-            }
+            .map { $0 }
     }
     
     func currentWeather(at lat: Double, lon: Double) -> Observable<Weather> {
@@ -35,10 +32,8 @@ struct WeatherApi {
             .request(method: "GET",
                      pathComponent: "weather",
                      params: [("lat", "\(lat)"), ("lon", "\(lon)")],
-                     maxRetry: weatherRequestMaxRetry)
-            .map { data in
-                let decoder = JSONDecoder()
-                return try decoder.decode(Weather.self, from: data)
-            }
+                     maxRetry: weatherRequestMaxRetry
+            )
+            .map { $0 }
     }
 }

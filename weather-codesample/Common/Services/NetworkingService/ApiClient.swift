@@ -10,11 +10,13 @@ import RxCocoa
 import CoreLocation
 import MapKit
 
+fileprivate var internalCache = [String: Data]()
+
 protocol ApiRequestable {
-    func request(method: String,
+    func request<Decodabl: Decodable>(method: String,
                  pathComponent: String,
                  params: [(String, String)],
-                 maxRetry: Int) -> Observable<Data>
+                 maxRetry: Int) -> Observable<Decodabl>
 }
 
 extension ApiClient: ReachabilitySupporting { }
@@ -32,7 +34,7 @@ final class ApiClient: ApiRequestable {
         }
     }
   
-    func request(method: String = "GET", pathComponent: String, params: [(String, String)], maxRetry: Int) -> Observable<Data> {
+    func request<D: Decodable>(method: String = "GET", pathComponent: String, params: [(String, String)], maxRetry: Int) -> Observable<D> {
         let request = buildRequest(method: method, pathComponent: pathComponent, params: params)
         let retryHandler: (Observable<Error>) -> Observable<Int> = { err in
             return err.enumerated().flatMap { count, error -> Observable<Int> in
@@ -54,7 +56,9 @@ final class ApiClient: ApiRequestable {
                     .take(1)
             }
         }
-        return processRequest(request).retryWhen(retryHandler)
+        return URLSession.shared.rx
+            .decodable(request: request, type: D.self)
+            .retryWhen(retryHandler)
     }
     
     private func buildRequest(method: String = "GET", pathComponent: String, params: [(String, String)]) -> URLRequest {
@@ -71,7 +75,6 @@ final class ApiClient: ApiRequestable {
             urlComponents.queryItems = queryItems
         } else {
             urlComponents.queryItems = [keyQueryItem, unitsQueryItem]
-            
             let jsonData = try! JSONSerialization.data(withJSONObject: params, options: .prettyPrinted)
             request.httpBody = jsonData
         }
@@ -80,27 +83,5 @@ final class ApiClient: ApiRequestable {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         return request
-    }
-    
-    private func processRequest(_ request: URLRequest) -> Observable<Data> {
-        let session = URLSession.shared
-        return session.rx.response(request: request).map { tuple in
-            ApiClient.requestRetryMessage.accept("")
-            switch tuple.response.statusCode {
-            case 200..<300:
-                return tuple.data
-            case 401:
-                throw ApplicationErrors.ApiClient.invalidToken
-            case 404:
-                throw ApplicationErrors.ApiClient.notFound
-            case 400..<500:
-                throw ApplicationErrors.ApiClient.serverError
-            case -1009:
-                throw ApplicationErrors.ApiClient.serverError
-            default:
-                throw ApplicationErrors.ApiClient.serverError
-            }
-        }
-        
     }
 }

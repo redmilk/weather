@@ -30,26 +30,26 @@ final class MainSceneViewController: UIViewController {
     @IBOutlet private weak var locationButton: UIButton!
     @IBOutlet private weak var errorLabel: UILabel!
     
-    private var intent = MainSceneIntent(reducer: MainSceneReducer())
+    private var reducer = MainSceneReducer()
     private let bag = DisposeBag()
         
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        /// Actions
+        /// Output
         locationButton.rx.controlEvent(.touchUpInside)
-            .map { MainSceneIntent.Action.currentLocationWeather }
-            .bind(to: intent.action)
+            .map { MainSceneReducer.Action.currentLocationWeather }
+            .bind(to: reducer.action)
             .disposed(by: bag)
         
         searchTextField.rx.controlEvent(.editingDidEndOnExit)
             .map { self.searchTextField.text ?? nil }
             .unwrap()
-            .map { MainSceneIntent.Action.getWeatherBy(city: $0) }
-            .bind(to: intent.action)
+            .map { MainSceneReducer.Action.getWeatherBy(city: $0) }
+            .bind(to: reducer.action)
             .disposed(by: bag)
         
-        /// State Input
+        /// Input from state
         let state = store
             .mainSceneState
             .observeOn(MainScheduler.instance)
@@ -99,7 +99,7 @@ final class MainSceneViewController: UIViewController {
             .drive(searchTextField.rx.isEnabled)
             .disposed(by: bag)
         
-        /// Request retry text
+        /// retry text alert for debug
         state
             .flatMap { $0.requestRetryText }
             .observeOn(MainScheduler.instance)
@@ -119,13 +119,14 @@ final class MainSceneViewController: UIViewController {
             .observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak self] (errorData: (msg: String, title: String)) -> Void in
                 guard let self = self else { return }
-                if errorData.title == "No location access" {
-                    self.present(alertWithActionAndText: errorData.msg, title: errorData.title, actionTitle: "Go to Settings") {
+                switch errorData.title {
+                case "No location access":
+                    self.present(alertWithActionAndText: errorData.msg, title: "Go to Settings", actionTitle: errorData.title) {
                         Helper.openSettings()
                     }
                     .subscribe()
                     .disposed(by: self.bag)
-                } else {
+                case _:
                     self.present(simpleAlertWithText: errorData.msg, title: errorData.title)
                         .subscribe()
                         .disposed(by: self.bag)
