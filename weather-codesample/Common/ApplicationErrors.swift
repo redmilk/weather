@@ -13,6 +13,8 @@ enum ApplicationErrors {
         case notFound
         case invalidToken
         case serverError
+        case invalidResponse
+        case deserializationFailed
     }
     
     enum Location: Error {

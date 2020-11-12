@@ -121,7 +121,7 @@ final class MainSceneViewController: UIViewController {
                 guard let self = self else { return }
                 switch errorData.title {
                 case "No location access":
-                    self.present(alertWithActionAndText: errorData.msg, title: errorData.title, actionTitle: "Go to Settings") {
+                    self.present(alertWithActionAndText: errorData.msg, title: "Go to Settings", actionTitle: errorData.title) {
                         Helper.openSettings()
                     }
                     .subscribe()

@@ -57,6 +57,7 @@ class MainSceneReducer {
                     
                 /// current location weather
                 case .currentLocationWeather:
+                    self.locationService.requestPermission()
                     if self.reachability.status.value != .online {
                         newState.errorAlertContent.onNext(self.handleError(ApplicationErrors.Network.noConnection))
                         newState.errorAlertContent.onNext(nil)
@@ -114,9 +115,6 @@ class MainSceneReducer {
        return self.locationService.currentLocation
             .map { ($0.coordinate.latitude, $0.coordinate.longitude) }
             .flatMap { self.weatherApi.currentWeather(at: $0.0, lon: $0.1) }
-            .do(onSubscribe: {
-                self.locationService.requestPermission()
-            })
     }
     
     private lazy var actualState: BehaviorSubject<MainSceneState> = {
@@ -135,17 +133,26 @@ extension MainSceneReducer: ErrorHandling {
         switch error {
         case let request as ApplicationErrors.ApiClient:
             switch request {
-            case .notFound: return ("City not found", "😰")
-            case .serverError: return ("Something went wrong", "Server error")
-            case .invalidToken: return ("Token is invalid", "Required authentication")
+            case .notFound:
+                return ("City not found", "😰")
+            case .serverError:
+                return ("Something went wrong", "Server error")
+            case .invalidToken:
+                return ("Token is invalid", "Required authentication")
+            case .invalidResponse:
+                return ("Request failure", "Ivalid response")
+            case .deserializationFailed:
+                return ("Deserialization failure", "Decodable fail")
             }
         case let location as ApplicationErrors.Location:
             switch location {
-            case .noPermission: return ("Please provide access to location services in Settings app", "No location access")
+            case .noPermission:
+                return ("Please provide access to location services in Settings app", "No location access")
             }
         case let network as ApplicationErrors.Network:
             switch network {
-            case .noConnection:  return ("Looking for internet connection...", "Internet connection failure")
+            case .noConnection:
+                return ("Looking for internet connection...", "Internet connection failure")
             }
         default: break
         }
