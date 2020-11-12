@@ -55,7 +55,7 @@ extension NetworkSupporting {
 /// - Weather API
 protocol WeatherApiSupporting { }
 extension WeatherApiSupporting {
-    var api: WeatherApi {
+    var weatherApi: WeatherApi {
         return services.weatherApi
     }
 }

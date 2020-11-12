@@ -28,7 +28,7 @@ extension UIViewController {
             alert.addAction(UIAlertAction(title: "Close", style: .default, handler: { _ in
                 completable(.completed)
             }))
-            alert.addAction(UIAlertAction(title: "Go to Settings", style: .default, handler: { _ in
+            alert.addAction(UIAlertAction(title: title, style: .default, handler: { _ in
                 action()
                 completable(.completed)
             }))
