@@ -8,7 +8,7 @@
 import UIKit
 
 enum AppScenes {
-    case main
+    case mainK
     case detail
 }
 

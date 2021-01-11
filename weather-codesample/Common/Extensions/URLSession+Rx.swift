@@ -6,6 +6,8 @@
 //
 
 import RxSwift
+import Foundation
+import UIKit
 
 fileprivate var internalCache = [String: Data]()
 
