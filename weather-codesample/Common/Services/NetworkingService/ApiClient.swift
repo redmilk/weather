@@ -29,9 +29,9 @@ final class ApiClient: ApiRequestable {
     static let requestRetryMessage = BehaviorRelay<String>(value: "")
     
     init() {
-        Logging.URLRequests = { request in
-            return true
-        }
+//        Logging.URLRequests = { request in
+//            return true
+//        }
     }
   
     func request<D: Decodable>(method: String = "GET", pathComponent: String, params: [(String, String)], maxRetry: Int) -> Observable<D> {
@@ -52,7 +52,7 @@ final class ApiClient: ApiRequestable {
                 }
                 ApiClient.requestRetryMessage.accept("🟥🟥🟥 Retry attempt: \(count + 1)")
                 return Observable<Int>
-                    .timer(Double(count + 2), scheduler: MainScheduler.instance)
+                    .timer(RxTimeInterval.milliseconds(2000), scheduler: MainScheduler.instance)
                     .take(1)
             }
         }

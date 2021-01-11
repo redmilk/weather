@@ -19,7 +19,6 @@ import RxCocoa
 /// Access to state store
 extension MainSceneViewController: StateStoreSupporting, NetworkSupporting { }
 
-
 final class MainSceneViewController: UIViewController {
     
     @IBOutlet private weak var searchTextField: UITextField!
